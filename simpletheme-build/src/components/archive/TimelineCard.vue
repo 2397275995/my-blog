@@ -1,0 +1,153 @@
+<script setup lang="ts">
+/**
+ * TimelineCard — 单个年份时间线卡片（含12月日历格）
+ */
+import { StTag } from '@/ui'
+
+defineProps<{
+  year: number
+  total: number
+  activeMonths: boolean[]
+}>()
+
+const emit = defineEmits<{
+  (e: 'select', year: number): void
+}>()
+</script>
+
+<template>
+  <button
+    type="button"
+    class="timeline-card"
+    :aria-label="`查看 ${year} 年的 ${total} 篇文章`"
+    aria-haspopup="dialog"
+    @click="emit('select', year)"
+  >
+    <!--
+      保留原生 <button>：整块卡片即按钮，依赖 hover:-translate-y/scale 与
+      任意栅格几何，迁 StButton 会把内容塞进 .st-button__content 而丢失布局。
+      依据见 src/ui/README.md「何时不该用 StButton」。
+    -->
+    <div class="timeline-card__head">
+      <span class="timeline-card__year">{{ year }}</span>
+      <StTag round>{{ total }} 篇文章</StTag>
+    </div>
+    <div class="timeline-card__months">
+      <span
+        v-for="m in 12"
+        :key="m"
+        class="timeline-card__month"
+        :class="{ 'is-active': activeMonths[m - 1] }"
+        >{{ m }}</span
+      >
+    </div>
+  </button>
+</template>
+
+<style scoped>
+.timeline-card {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+  padding: 1.2rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-large);
+  background-color: var(--card);
+  text-align: left;
+  cursor: pointer;
+  appearance: none;
+  backdrop-filter: blur(24px);
+  box-shadow: 0 4px 24px 0 rgb(0 0 0 / 0.07);
+  transition: transform var(--duration-enter) var(--ease-in-out),
+    border-color var(--duration-enter) var(--ease-in-out),
+    box-shadow var(--duration-enter) var(--ease-in-out);
+}
+
+.timeline-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.08);
+}
+
+.timeline-card:focus-visible {
+  border-color: var(--primary);
+}
+
+.timeline-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.timeline-card__year {
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 800;
+  color: var(--foreground);
+}
+
+.timeline-card__months {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.timeline-card__month {
+  display: flex;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px solid transparent;
+  border-radius: var(--radius-medium);
+  background-color: var(--border);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--foreground);
+  transition: transform var(--transition-fast), border-color var(--transition-fast),
+    background-color var(--transition-fast), color var(--transition-fast);
+}
+
+[data-theme='dark'] .timeline-card__month {
+  background-color: rgb(255 255 255 / 0.08);
+  color: #aaa;
+}
+
+.timeline-card__month.is-active {
+  transform: scale(1.02);
+  border-color: var(--primary);
+  background-color: var(--primary);
+  color: #fff;
+  box-shadow: 0 2px 12px -4px var(--primary);
+}
+
+[data-theme='dark'] .timeline-card__month.is-active {
+  color: #222;
+}
+
+/* 手机端：卡片占满整行，若沿用 6×2 方格会把月份格撑到 47px、卡片近 200px 高。
+   月份格只是「哪个月有文章」的指示（整卡即按钮），故排成一行 12 格做紧凑日历条。 */
+@media (max-width: 600px) {
+  .timeline-card {
+    gap: 12px;
+    padding: 1rem;
+  }
+
+  .timeline-card__year {
+    font-size: 20px;
+  }
+
+  .timeline-card__months {
+    grid-template-columns: repeat(12, 1fr);
+    grid-template-rows: 1fr;
+    gap: 5px;
+  }
+
+  .timeline-card__month {
+    font-size: 0.625rem;
+    border-width: 1px;
+    border-radius: var(--radius-small, 4px);
+  }
+}
+</style>

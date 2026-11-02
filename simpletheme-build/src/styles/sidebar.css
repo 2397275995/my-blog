@@ -1,0 +1,753 @@
+/* Sidebars: left nav rail, right profile/cards/tech-info/footer */
+@layer components {
+/* ==================== Left Sidebar (100px nav rail) ====================
+   Kept as structured CSS: icons come from v-html, selectors are JS hooks
+   (LeftSidebar tooltip), and .sub-menu is shared with floating panels. */
+.left-sidebar {
+  width: 100px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-right: 1px solid var(--border);
+  background-color: var(--card);
+  z-index: 99;
+}
+
+/* Menu container */
+.left-sidebar__menu {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: clip;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 20px 0;
+  scrollbar-width: none;
+}
+
+.left-sidebar__menu::-webkit-scrollbar {
+  display: none;
+}
+
+.left-sidebar__menu ul {
+  /* 原为 margin-block:auto（垂直居中）；菜单项少时会在搜索按钮下留出大片空白，
+     改成贴顶排列，与演示站一致 */
+  margin-block: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* 顶部菜单项入场：与右侧小组件（.aside-card 的 card-enter）同款上移 + 轻微放大回弹。
+   用 backwards 而不是 both —— 动画结束后不再保留 transform，
+   避免给 li 造出多余的包含块/层叠上下文。 */
+@keyframes menu-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.left-sidebar__menu ul li {
+  animation: menu-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(0.04s + var(--st-menu-index, 0) * 0.045s);
+}
+
+/* 顶部搜索按钮：整条图标栏里最早出现的一个 */
+.left-sidebar__search {
+  animation: menu-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* 底部操作按钮（登录 / 深浅色）：接着菜单项往下排，
+   起点由 LeftSidebar 按当前菜单数量算成 --st-actions-delay 传进来 */
+.sidebar-actions > *:not(.sidebar-actions__skeleton) {
+  animation: menu-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: var(--st-actions-delay, 0.22s);
+}
+
+.sidebar-actions > *:nth-child(2) {
+  animation-delay: calc(var(--st-actions-delay, 0.22s) + 0.045s);
+}
+
+.sidebar-actions > *:nth-child(3) {
+  animation-delay: calc(var(--st-actions-delay, 0.22s) + 0.09s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .left-sidebar__menu ul li,
+  .left-sidebar__search,
+  .sidebar-actions > * {
+    animation: none;
+  }
+}
+
+/* Top-level items: 50px icon buttons (links and toggle buttons) */
+.left-sidebar__menu ul li a,
+.left-sidebar__menu ul li button.menu-toggle {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 50px;
+  height: 50px;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 0;
+  color: var(--foreground);
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.left-sidebar__menu ul li a:hover,
+.left-sidebar__menu ul li button.menu-toggle:hover {
+  background-color: var(--menu-hover);
+}
+
+.left-sidebar__menu ul li a svg,
+.left-sidebar__menu ul li button.menu-toggle svg {
+  width: 24px;
+  height: 24px;
+  color: var(--foreground);
+}
+
+/* Current item highlight */
+.left-sidebar__menu ul li.current-menu-item > a {
+  color: var(--primary-foreground);
+  background-color: var(--primary);
+  box-shadow: 0 2px 20px 0 rgba(0 0 0 / 0.2);
+}
+
+.left-sidebar__menu ul li.current-menu-item > a svg {
+  color: var(--primary-foreground);
+  filter: drop-shadow(0 0 3px rgba(0 0 0 / 0.2));
+}
+
+/* Item titles: hidden on desktop, used as tooltip data source */
+.left-sidebar__menu ul li a .menu-item-title,
+.left-sidebar__menu ul li button.menu-toggle .menu-item-title {
+  display: none;
+}
+
+/* Items with children: anchor for the floating panel position */
+.left-sidebar__menu ul li.menu-item-has-children {
+  position: relative;
+}
+
+/* Chevron indicator on toggle buttons — 右下角小角标。
+   特异性必须压过上方 `ul li button.menu-toggle svg` 的 24px 图标规则，
+   否则 chevron 被放大到 24px 叠在主图标上 */
+.left-sidebar__menu ul li button.menu-toggle svg.sub-menu-chevron {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 10px;
+  height: 10px;
+  color: var(--secondary);
+  opacity: 0.7;
+}
+
+/* ===== Sub-menu panel (floating, rendered by LeftSidebar) ===== */
+.sub-menu {
+  position: absolute;
+  left: calc(100% + 14px);
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: 170px;
+  padding: 6px;
+  margin: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border-radius: 10px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.sub-menu li {
+  display: flex;
+}
+
+.sub-menu li a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 14px;
+  border-radius: 7px;
+  color: var(--foreground);
+  text-decoration: none;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 450;
+  transition: all 0.15s ease;
+  width: 100%;
+}
+
+.sub-menu li a:hover {
+  background-color: var(--menu-hover);
+}
+
+.sub-menu li a svg {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  color: var(--secondary);
+  transition: color 0.15s;
+}
+
+.sub-menu li a:hover svg {
+  color: var(--foreground);
+}
+
+/* Sub-menu items: show icon + title inline */
+.sub-menu li a .menu-item-title {
+  position: static;
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  padding: 0;
+  color: inherit;
+  font-size: 13px;
+  font-weight: 450;
+  white-space: nowrap;
+  display: inline;
+}
+
+.sub-menu li.current-menu-item a {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.sub-menu li.current-menu-item a svg {
+  color: var(--primary-foreground);
+}
+
+/* Floating sub-menu panel: fixed positioning escapes scroll clipping */
+.sub-menu--floating {
+  position: fixed;
+  transform: translateY(-50%) translateX(-8px);
+  left: 0;
+  top: 0;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+}
+
+.sub-menu--floating.is-open {
+  transform: translateY(-50%) translateX(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* ===== Narrow left drawer (< 1200px) ===== */
+@media (max-width: 1200px) {
+  .left-sidebar {
+    position: fixed;
+    top: 56px;
+    left: 0;
+    bottom: 0;
+    width: 90px;
+    height: calc(100dvh - 56px);
+    z-index: 999;
+    border-left: none;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    padding-top: 12px;
+    overflow-y: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+    box-shadow: none;
+  }
+
+  .left-sidebar--open {
+    transform: translateX(0);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* Floating panels above the drawer */
+  .sub-menu--floating {
+    z-index: 1000;
+  }
+
+  .left-sidebar__menu {
+    padding: 4px 0;
+  }
+
+  .left-sidebar__menu ul {
+    gap: 16px;
+    width: 100%;
+  }
+
+  .left-sidebar__menu ul li {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    position: relative;
+    padding-bottom: 14px;
+  }
+
+  /* Titles: shown as small captions below icons */
+  .left-sidebar__menu ul li a .menu-item-title,
+  .left-sidebar__menu ul li button.menu-toggle .menu-item-title {
+    position: absolute;
+    top: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%);
+    display: block;
+    font-size: 12px;
+    line-height: 1.3;
+    color: var(--secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 80px;
+    text-align: center;
+    pointer-events: none;
+  }
+}
+
+/* Author Profile */
+.aside-author {
+  position: relative;
+}
+
+.aside-author__cover {
+  width: 100%;
+  height: 170px;
+}
+
+.aside-author__cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.aside-author__info {
+  width: 100%;
+  margin-top: -40px;
+  padding: 0 20px 20px;
+  text-align: center;
+}
+
+.aside-author__avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 10px;
+  /* 头像本体由 StAvatar 渲染（圆形 + 首字符回退 + 白描边） */
+  border-radius: 50%;
+  box-shadow:
+    0 0 8px rgb(28 31 35 / 4%),
+    0 0 24px 8px rgb(28 31 35 / 6%);
+}
+
+.aside-author__avatar .st-avatar {
+  border: 2px solid var(--card);
+}
+
+.aside-author__name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 5px;
+}
+
+.aside-author__des {
+  font-size: 13px;
+  color: var(--secondary);
+  margin-bottom: 20px;
+}
+
+.aside-author__stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  width: 100%;
+  background-color: var(--accent);
+  border-radius: 8px;
+}
+
+.aside-author__stats div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 14px 8px 12px;
+}
+
+/* Loading skeleton: remove borders and card backgrounds */
+.aside-author__stats.is-loading {
+  border: none;
+  background: transparent;
+  gap: 4px;
+}
+
+.aside-author__stats.is-loading div {
+  background: transparent;
+  padding: 10px 8px;
+}
+
+.aside-author__stats i {
+  font-style: normal;
+  color: var(--secondary);
+  font-size: 11px;
+  margin-top: 4px;
+  letter-spacing: 0.02em;
+  order: 1;
+}
+
+.aside-author__stats span {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--foreground);
+  line-height: 1.3;
+}
+
+.aside-author__view-more {
+  display: block;
+  text-align: center;
+  padding: 8px;
+  font-size: 13px;
+  color: var(--secondary);
+  margin-top: 15px;
+  transition: color var(--transition-fast);
+}
+
+.aside-author__view-more:hover {
+  color: var(--foreground);
+}
+
+/* ===== Unified Cards in right sidebar ===== */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.aside-card {
+  background: var(--card);
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 0 20px 20px;
+  animation: card-enter 0.55s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.main-page > .aside-card:nth-child(1) { animation-delay: 0.05s; }
+.main-page > .aside-card:nth-child(2) { animation-delay: 0.13s; }
+.main-page > .aside-card:nth-child(3) { animation-delay: 0.21s; }
+.main-page > .aside-card:nth-child(4) { animation-delay: 0.29s; }
+.main-page > .aside-card:nth-child(5) { animation-delay: 0.37s; }
+
+.aside-card + .aside-card {
+  margin-top: 12px;
+}
+
+.aside-card__title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--foreground);
+  padding: 20px 0 0;
+  margin: 0 0 14px;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.aside-card__title span {
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--secondary);
+}
+
+.aside-card--no-padding {
+  padding: 0;
+}
+
+.aside-card--profile {
+  position: relative;
+  overflow: visible; /* 封面图不裁剪圆角 */
+  padding: 0;
+}
+
+.aside-card--social .social-content .social-icons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: var(--muted);
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.aside-card--social .social-content .social-icons a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--foreground);
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.aside-card--social .social-content .social-icons a:hover {
+  background: var(--foreground);
+  color: var(--card);
+  transform: translateY(-2px);
+}
+
+body[data-theme='dark'] .aside-card--social .social-content .social-icons a {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.aside-card--social .social-content .social-icons a svg,
+.aside-card--social .social-content .social-icons a i {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+/* ==================== Generic Widgets (核心/区块/第三方小工具统一风格) ====================
+   后端用 before_widget=‘.aside-card widget’、before_title=‘.aside-card__title’ 包裹，
+   这里为小工具内部的常见 markup（列表/搜索/标签云/日历/下拉）套主题样式。 */
+.sidebar-widget .aside-card {
+  padding-top: 20px;
+}
+.sidebar-widget .aside-card .aside-card__title {
+  padding-top: 0;
+}
+
+/* 区块小工具标题（不走 before_title 时）对齐卡片标题风格 */
+.sidebar-widget .widget-title,
+.sidebar-widget .wp-block-heading,
+.sidebar-widget h2,
+.sidebar-widget h3,
+.sidebar-widget h4 {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--foreground);
+  margin: 0 0 14px;
+}
+
+/* 列表（最新文章/评论/归档/分类） */
+.sidebar-widget ul,
+.sidebar-widget ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.sidebar-widget li {
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--secondary);
+}
+.sidebar-widget li:last-child {
+  border-bottom: none;
+}
+.sidebar-widget a {
+  color: var(--foreground);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.sidebar-widget a:hover {
+  color: var(--primary);
+}
+
+/* 嵌套子菜单缩进 */
+.sidebar-widget li .children,
+.sidebar-widget li .sub-menu {
+  padding-left: 14px;
+}
+
+/* 搜索表单（.wp-block-search / 核心 search widget） */
+.sidebar-widget .wp-block-search__inside-wrapper,
+.sidebar-widget form[role='search'],
+.sidebar-widget .search-form {
+  display: flex;
+  gap: 8px;
+}
+.sidebar-widget input[type='search'],
+.sidebar-widget input[type='text'] {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--foreground);
+  background: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  transition: border-color 0.15s ease;
+}
+.sidebar-widget input[type='search']:focus,
+.sidebar-widget input[type='text']:focus {
+  outline: none;
+  border-color: var(--primary);
+  background: var(--card);
+}
+.sidebar-widget button,
+.sidebar-widget input[type='submit'],
+.sidebar-widget .wp-block-search__button {
+  padding: 8px 14px;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--primary-foreground);
+  background: var(--primary);
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: opacity 0.15s ease;
+}
+.sidebar-widget button:hover,
+.sidebar-widget input[type='submit']:hover,
+.sidebar-widget .wp-block-search__button:hover {
+  opacity: 0.85;
+}
+
+/* 下拉选择（分类/归档小工具） */
+.sidebar-widget select {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--foreground);
+  background: var(--faint);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-family: inherit;
+  cursor: pointer;
+}
+.sidebar-widget select:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* 标签云 — chip 样式 */
+.sidebar-widget .wp-block-tag-cloud,
+.sidebar-widget .tagcloud {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.sidebar-widget .tag-cloud-link {
+  display: inline-block;
+  padding: 4px 10px;
+  font-size: 13px !important;
+  color: var(--secondary);
+  background: var(--muted);
+  border-radius: 8px;
+  border-bottom: none;
+  transition: all 0.15s ease;
+}
+.sidebar-widget .tag-cloud-link:hover {
+  color: var(--primary-foreground);
+  background: var(--primary);
+}
+
+/* 日历 */
+.sidebar-widget .wp-calendar-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.sidebar-widget .wp-calendar-table th,
+.sidebar-widget .wp-calendar-table td {
+  padding: 5px;
+  text-align: center;
+  border: 1px solid var(--border);
+  color: var(--secondary);
+}
+.sidebar-widget .wp-calendar-table th {
+  color: var(--foreground);
+  font-weight: 600;
+}
+.sidebar-widget .wp-calendar-table td#today {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+.sidebar-widget .wp-calendar-nav {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 13px;
+}
+
+/* 最近评论作者/日期次要文本 */
+.sidebar-widget .rss-date,
+.sidebar-widget .comment-author-link,
+.sidebar-widget .post-date {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+/* ===== 作者卡：横幅 + 头像 + 站名 =====
+   头像压在横幅下沿，站名在头像下方。间距写死，不再靠原主题的负边距叠加。 */
+.aside-author {
+  position: relative;
+}
+
+.aside-author__cover {
+  height: 170px;
+  overflow: hidden;
+  border-radius: calc(var(--radius-large) - 1px) calc(var(--radius-large) - 1px) 0 0;
+}
+
+.aside-author__info {
+  position: relative;
+  margin-top: 0;
+  padding: 0 20px 20px;
+  text-align: center;
+}
+
+.aside-author__avatar {
+  position: relative;
+  z-index: 2;
+  width: 80px;
+  height: 80px;
+  margin: -40px auto 12px;
+}
+
+.aside-author__avatar .st-avatar {
+  border: 3px solid var(--card);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 12%);
+}
+
+.aside-author__name {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: var(--foreground);
+}
+
+.aside-author__des {
+  margin-bottom: 18px;
+}
+}

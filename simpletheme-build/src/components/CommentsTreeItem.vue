@@ -1,0 +1,236 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { likeComment } from '@/lib/wordpress'
+import { renderCommentContent } from '@/lib/emoji'
+import type { WordPressComment } from '@/types/wordpress'
+import { StAvatar, StButton, StTag } from '@/ui'
+import AppIcon from '@/components/AppIcon.vue'
+
+defineOptions({ name: 'CommentsTreeItem' })
+
+const props = defineProps<{
+  item: WordPressComment
+  depth?: number
+}>()
+
+const emit = defineEmits<{
+  (e: 'reply', id: number): void
+  (e: 'liked', payload: { id: number; likes: number }): void
+  (e: 'like-error', message: string): void
+  (e: 'delete', commentId: number): void
+  (e: 'pin-toggle', commentId: number, pin: boolean): void
+}>()
+
+const level = computed(() => props.depth || 0)
+
+const liking = ref(false)
+const liked = ref(localStorage.getItem(`simple_theme_comment_liked_${props.item.id}`) === '1')
+
+const relativeTime = computed(() => {
+  const now = Date.now()
+  const then = new Date(props.item.date).getTime()
+  const diff = Math.max(0, now - then)
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return '刚刚'
+  if (mins < 60) return `${mins} 分钟前`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours} 小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days} 天前`
+  const months = Math.floor(days / 30)
+  if (months < 12) return `${months} 个月前`
+  const years = Math.floor(months / 12)
+  return `${years} 年前`
+})
+
+const avatarSources = ref<string[]>([])
+
+function initAvatarSources() {
+  const sources: string[] = []
+
+  // ① Try QQ avatar first (if QQ number detected)
+  if (props.item.qqAvatar) {
+    sources.push(props.item.qqAvatar)
+  }
+
+  // ② Backend avatar
+  if (props.item.avatar) {
+    sources.push(props.item.avatar)
+  }
+
+  // ③ Website favicon
+  if (props.item.authorUrl && isValidUrl(props.item.authorUrl)) {
+    const domain = new URL(props.item.authorUrl).hostname
+    sources.push(`https://${domain}/favicon.ico`)
+  }
+
+  // ④ Text avatar fallback
+  sources.push('')
+
+  avatarSources.value = sources
+}
+
+function isValidUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  }
+  catch { return false }
+}
+
+initAvatarSources()
+
+const avatarIndex = ref(0)
+const avatarUrl = computed(() => avatarSources.value[avatarIndex.value])
+
+function onAvatarError() {
+  avatarIndex.value++
+}
+
+const goUrl = computed(() => {
+  if (!props.item.authorUrl || !isValidUrl(props.item.authorUrl)) return ''
+  return '/go?url=' + encodeURIComponent(props.item.authorUrl)
+})
+
+const hasChildren = computed(() => !!(props.item.children && props.item.children.length > 0))
+
+const renderedContent = computed(() => renderCommentContent(props.item.content.rendered))
+
+async function handleLike() {
+  if (liking.value) return
+  liking.value = true
+  try {
+    const nextLikes = await likeComment(props.item.id)
+    liked.value = !liked.value
+    localStorage.setItem(`simple_theme_comment_liked_${props.item.id}`, liked.value ? '1' : '0')
+    emit('liked', { id: props.item.id, likes: nextLikes })
+  } catch (error) {
+    const message = error instanceof Error ? error.message : '点赞失败，请稍后再试。'
+    emit('like-error', message)
+  } finally {
+    liking.value = false
+  }
+}
+
+function togglePin() {
+  emit('pin-toggle', props.item.id, !props.item.isPinned)
+}
+</script>
+
+<template>
+  <div
+    class="comments-item"
+    :class="
+      item.isPinned &&
+      'relative before:absolute before:inset-x-0 before:top-0 before:h-[2px] before:rounded-t-[2px] before:bg-primary before:opacity-50'
+    "
+  >
+    <div class="comments-item__main">
+      <div class="comments-item__avatar">
+        <a
+          v-if="goUrl"
+          :href="goUrl"
+          rel="nofollow noopener noreferrer"
+          class="comments-item__avatar-link"
+        >
+          <StAvatar
+            :src="avatarUrl || undefined"
+            :fallback-text="item.authorName"
+            :size="38"
+            @error="onAvatarError"
+          />
+        </a>
+        <StAvatar
+          v-else
+          :src="avatarUrl || undefined"
+          :fallback-text="item.authorName"
+          :size="38"
+          @error="onAvatarError"
+        />
+      </div>
+
+      <div class="comments-item__body">
+        <div class="comments-item__meta">
+          <a
+            v-if="goUrl"
+            :href="goUrl"
+            rel="nofollow noopener noreferrer"
+            class="comments-item__name"
+          >
+            {{ item.authorName || '匿名用户' }}
+          </a>
+          <strong v-else class="comments-item__name">
+            {{ item.authorName || '匿名用户' }}
+          </strong>
+
+          <!-- Badges -->
+          <StTag v-if="item.isPinned" type="primary" size="tiny" :bordered="false">置顶</StTag>
+          <StTag v-if="item.isPrivate" type="warning" size="tiny" :bordered="false">私密</StTag>
+          <StTag v-if="item.status === 'hold'" size="tiny" :bordered="false">待审核</StTag>
+        </div>
+
+        <!-- Normal content -->
+        <div class="comments-item__text" v-html="renderedContent"></div>
+
+        <!-- Time + Device info -->
+        <span class="comments-item__time">{{ relativeTime }}</span>
+        <span v-if="item.metaInfo?.browser || item.metaInfo?.os || item.metaInfo?.location" class="comments-item__meta-info">
+          {{ item.metaInfo.browser }}<template v-if="item.metaInfo.os || item.metaInfo.location"> · {{ item.metaInfo.os }}</template><template v-if="item.metaInfo.location"> · {{ item.metaInfo.location }}</template>
+        </span>
+
+        <div class="comments-item__actions">
+          <StButton
+            v-if="item.status !== 'hold'"
+            size="small"
+            :type="liked ? 'error' : 'default'"
+            :ghost="liked"
+            :quaternary="!liked"
+            :disabled="liking"
+            @click="handleLike"
+          >
+            <template #icon>
+              <AppIcon name="thumb-up" :size="14" />
+            </template>
+            <span v-if="item.likes > 0">{{ item.likes }}</span>
+            <span v-else>赞</span>
+          </StButton>
+          <StButton size="small" quaternary @click="emit('reply', item.id)">
+            <template #icon>
+              <AppIcon name="arrow-back-up" :size="14" />
+            </template>
+            回复
+          </StButton>
+          <StButton
+            v-if="item.status === 'hold'"
+            size="small"
+            quaternary
+            @click="emit('delete', item.id)"
+          >
+            <template #icon>
+              <AppIcon name="trash" :size="14" />
+            </template>
+            删除
+          </StButton>
+          <StButton v-if="item.canPin" size="small" quaternary @click="togglePin">
+            {{ item.isPinned ? '取消置顶' : '置顶' }}
+          </StButton>
+        </div>
+
+      </div>
+    </div>
+
+    <div v-if="hasChildren" class="comments-nested">
+      <CommentsTreeItem
+        v-for="child in item.children"
+        :key="child.id"
+        :item="child"
+        :depth="level + 1"
+        @reply="emit('reply', $event)"
+        @liked="emit('liked', $event)"
+        @like-error="emit('like-error', $event)"
+        @delete="(id: number) => emit('delete', id)"
+        @pin-toggle="(id: number, pin: boolean) => emit('pin-toggle', id, pin)"
+      />
+    </div>
+  </div>
+</template>

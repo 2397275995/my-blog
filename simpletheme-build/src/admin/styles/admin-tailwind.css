@@ -1,0 +1,83 @@
+/* ==================== Admin Tailwind Entry ====================
+ * 用于 wp-admin 内的挂载点（后台设置 SPA + AdminShell）。
+ *
+ * 刻意不引入 Preflight：wp-admin 自身有完整样式，全局 reset 会破坏
+ * WP 后台外观。替代方案见本文件末尾的"最小化 reset"，只作用于我们自己的
+ * 挂载根节点。
+ *
+ * 设计令牌全部来自 ../styles/tokens.css（唯一事实来源）。
+ * 此前本文件手抄了一份调色板并且缺失 @theme 块（导致 rounded-medium /
+ * shadow-large 等工具类静默失效），均已修复 —— 不要再把取值写回这里。
+ *
+ * ⚠️ 工具类（utilities）必须嵌套在挂载根选择器内，绝不能全局引入。
+ *    Tailwind 会生成 .fixed{position:fixed}、.hidden{display:none} 等
+ *    短类名，而 wp-admin 核心 HTML 大量使用同名类（例如列表页的
+ *    <table class="wp-list-table widefat fixed striped">，其中 fixed 表示
+ *    "固定表格布局"）。全局引入会让 WP 的表格变成 position:fixed —— 表现
+ *    为标题栏/tablenav 被钉在视口里、滚动错乱、控件重复堆叠。
+ *    嵌套后产物为 `#simple-theme-admin-shell .fixed{...}`，只作用于我们的
+ *    组件，不再污染 WP 后台。
+ * ============================================================== */
+@import 'tailwindcss/theme.css' layer(theme);
+@import '../../styles/tokens.css';
+
+@layer utilities {
+  #simple-theme-admin-app,
+  #simple-theme-admin-sidebar,
+  #simple-theme-admin-topbar,
+  #simple-theme-admin-shell,
+  .sta-shell-pop {
+    @import 'tailwindcss/utilities.css';
+  }
+}
+
+/* ==================== 最小化 reset ====================
+ * 只在我们的挂载根内部生效，不触碰 WP 后台其余部分。 */
+#simple-theme-admin-app,
+#simple-theme-admin-app *,
+#simple-theme-admin-app *::before,
+#simple-theme-admin-app *::after,
+#simple-theme-admin-sidebar,
+#simple-theme-admin-sidebar *,
+#simple-theme-admin-sidebar *::before,
+#simple-theme-admin-sidebar *::after,
+#simple-theme-admin-topbar,
+#simple-theme-admin-topbar *,
+#simple-theme-admin-topbar *::before,
+#simple-theme-admin-topbar *::after,
+#simple-theme-admin-shell,
+#simple-theme-admin-shell *,
+#simple-theme-admin-shell *::before,
+#simple-theme-admin-shell *::after,
+.sta-shell-pop,
+.sta-shell-pop *,
+.sta-shell-pop *::before,
+.sta-shell-pop *::after {
+  box-sizing: border-box;
+}
+
+#simple-theme-admin-app h1,
+#simple-theme-admin-app h2,
+#simple-theme-admin-app h3,
+#simple-theme-admin-app h4,
+#simple-theme-admin-app h5,
+#simple-theme-admin-app h6,
+#simple-theme-admin-app p,
+#simple-theme-admin-app ul,
+#simple-theme-admin-app ol,
+#simple-theme-admin-app figure,
+#simple-theme-admin-sidebar ul,
+#simple-theme-admin-sidebar ol,
+#simple-theme-admin-topbar ul,
+#simple-theme-admin-topbar ol,
+.sta-shell-pop ul,
+.sta-shell-pop ol {
+  margin: 0;
+  padding: 0;
+}
+
+#simple-theme-admin-sidebar ul,
+#simple-theme-admin-topbar ul,
+.sta-shell-pop ul {
+  list-style: none;
+}

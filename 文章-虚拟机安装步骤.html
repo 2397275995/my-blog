@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从零装一台虚拟机：VMware Workstation Pro + Ubuntu 26.04 LTS</title>
+<style>
+  :root{ --ink:#1a1d24; --ink-2:#414653; --muted:#8a90a0; --line:#e6e8ee; --brand:#3f5bd9; }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:#f4f5f8;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans SC",sans-serif;
+    font-size:16px;line-height:1.9;-webkit-font-smoothing:antialiased;
+  }
+  .page{max-width:820px;margin:32px auto 64px;background:#fff;padding:56px 64px;border-radius:14px;
+        box-shadow:0 1px 2px rgba(16,24,40,.05),0 18px 48px -20px rgba(16,24,40,.22)}
+  header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:34px}
+  h1{font-size:30px;line-height:1.45;font-weight:800;letter-spacing:-.5px;margin:0 0 14px}
+  .meta{font-size:13px;color:var(--muted);display:flex;gap:14px;flex-wrap:wrap}
+  h2{font-size:22px;font-weight:750;letter-spacing:-.3px;margin:44px 0 16px;padding-top:6px}
+  h3{font-size:17px;font-weight:700;margin:30px 0 10px;color:var(--ink-2)}
+  p{margin:0 0 16px}
+  ul,ol{margin:0 0 18px;padding-left:24px}
+  li{margin:6px 0}
+  strong{font-weight:700}
+  code{
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;
+    background:#f2f3f7;border:1px solid #e6e8ee;border-radius:5px;padding:1px 5px;
+  }
+  pre{
+    background:#1b1f2a;color:#e6ebf5;border-radius:10px;padding:16px 18px;overflow-x:auto;
+    font-size:13.5px;line-height:1.7;margin:0 0 20px;
+  }
+  pre code{background:none;border:0;padding:0;color:inherit;font-size:inherit}
+  blockquote{margin:20px 0;padding:12px 18px;border-left:3px solid var(--brand);background:#f6f7fb;color:var(--ink-2)}
+  .tip{font-size:13px;color:var(--muted);margin-top:48px;padding-top:18px;border-top:1px dashed var(--line)}
+  @media (max-width:720px){ .page{margin:0;border-radius:0;padding:28px 20px} h1{font-size:23px} h2{font-size:19px} }
+  @media print{
+    body{background:#fff;font-size:11.5pt;line-height:1.75}
+    .page{box-shadow:none;margin:0;padding:0;max-width:none}
+    pre{background:#f4f5f8;color:#111;border:1px solid #ddd;white-space:pre-wrap}
+    h2,h3{break-after:avoid}
+    pre,ul,li{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header>
+    <h1>从零装一台虚拟机：VMware Workstation Pro + Ubuntu 26.04 LTS</h1>
+    <div class="meta">
+      <span>作者：李旭阳</span>
+      <span>2026 年 11 月 1 日</span>
+      <span>分类：虚拟化</span>
+      <span>约 9 分钟阅读</span>
+    </div>
+  </header>
+<p>虚拟化是运维的基本功。这篇从零开始，把在 Windows 上用 VMware Workstation Pro 装一台 Ubuntu 26.04 LTS 虚拟机的完整流程走一遍：装工具、验镜像、配硬件、装系统、装完之后的必要优化，以及新手最容易卡住的几个地方。</p>
+<p>跟着做完大概 40 分钟，其中一半时间在等下载和安装。做完你会得到一台能 SSH 登录、能拍快照、随时可以推倒重来的 Linux。</p>
+
+<h2>一、动手前先确认三件事</h2>
+<p>很多人装到一半失败，问题都出在动手之前。</p>
+
+<h3>1. CPU 虚拟化有没有开</h3>
+<p>Windows 下按 Ctrl+Shift+Esc 打开任务管理器，切到「性能 → CPU」，右下角看「虚拟化」是不是「已启用」。如果是「已禁用」，需要重启进 BIOS/UEFI，找到 Intel VT-x（Intel 平台）或 SVM / AMD-V（AMD 平台）打开。</p>
+
+<h3>2. 内存够不够分</h3>
+<ul>
+<li>宿主机 16 GB：给虚拟机 4 GB，剩 12 GB 自己用，比较舒服。</li>
+<li>宿主机 8 GB：给 2 GB，并且装 Server 版（无图形界面）。</li>
+<li>底线是宿主机至少留 4 GB 给系统，不要把内存分满。</li>
+</ul>
+
+<h3>3. 磁盘放哪</h3>
+<p>别把虚拟磁盘放在 C 盘。一台 Ubuntu Server 建议预留 40 GB，桌面版 60 GB 起。VMware 的虚拟磁盘是「用多少长多少」，但上限要在建的时候给够——后期扩容比一开始就给足麻烦得多。</p>
+
+<h2>二、安装 VMware Workstation Pro</h2>
+<p>Workstation Pro 从 2024 年 11 月起对个人和商业用户都免费，不需要许可证密钥，也不用担心试用期。当前主线版本是按「年份 + 半年」命名的 26H1。</p>
+
+<h3>下载</h3>
+<p>要在 Broadcom 的支持站点下载，需要先注册一个免费账号：</p>
+<ul>
+<li>注册：profile.broadcom.com/web/registration</li>
+<li>登录后打开免费下载页：support.broadcom.com/group/ecx/productdownloads?subfamily=VMware Workstation Pro&amp;freeDownloads=true</li>
+</ul>
+<p>展开「VMware Workstation Pro 26H1 for Windows」，选最新版本号。先把 Terms and Conditions 点开读一遍（不点开没法勾选同意），勾上 I agree，右侧下载按钮才会亮。</p>
+
+<h3>安装时唯一要小心的地方：Hyper-V 冲突</h3>
+<p>如果安装向导提示检测到 Hyper-V，会让你二选一：</p>
+<ul>
+<li><strong>自动安装 Windows Hypervisor Platform（WHP）</strong>：保留 Hyper-V，VMware 通过 WHP 运行。装完能用，性能略降，但不用改系统设置。选这个最省事。</li>
+<li><strong>关闭 Hyper-V</strong>：性能最好，但要用管理员权限执行 bcdedit /set hypervisorlaunchtype off，并在「启用或关闭 Windows 功能」里取消勾选「Hyper-V」「虚拟机平台」「Windows 虚拟机监控程序平台」，然后重启。</li>
+</ul>
+<p>如果只是想学 Linux，选第一个就行，不要为了几帧性能把 Docker Desktop 和 WSL2 弄坏。</p>
+
+<h2>三、下载并校验系统镜像</h2>
+<p>示例用 Ubuntu 26.04 LTS（2026 年 4 月发布的长期支持版）。文件名里 live-server 是服务器版，desktop 是桌面版，amd64 是 64 位 x86。</p>
+<p>国内建议直接从镜像站下载，速度差好几倍：</p>
+<ul>
+<li>清华 TUNA：mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/26.04/</li>
+<li>阿里云：mirrors.aliyun.com/ubuntu-releases/26.04/</li>
+</ul>
+<p><strong>下完一定要校验 SHA256。</strong>这一步看着多余，但能挡掉下载中断导致的镜像损坏——那种情况装到一半才报错，排查起来非常费时间。</p>
+<pre><code># Linux / macOS / Git Bash
+sha256sum ubuntu-26.04.1-live-server-amd64.iso
+
+# Windows PowerShell
+Get-FileHash .\\ubuntu-26.04.1-live-server-amd64.iso -Algorithm SHA256</code></pre>
+<p>把输出和镜像站同目录下 SHA256SUMS 文件里的值对一下，一致就说明文件完整。</p>
+
+<h2>四、新建虚拟机</h2>
+<p>Workstation 里点「文件 → 新建虚拟机」，选「自定义」而不是「典型」。典型模式会替你定好一堆参数，其中磁盘控制器和网络模式往往不是你要的。</p>
+
+<h3>硬件怎么给</h3>
+<ul>
+<li><strong>CPU</strong>：2 核起步，别超过物理核数。</li>
+<li><strong>内存</strong>：Server 版 2 GB 够用，Desktop 版 4 GB 起。</li>
+<li><strong>磁盘</strong>：40 GB，存储方式选「拆分成多个文件」，方便以后把整个目录拷到别的机器。</li>
+<li><strong>磁盘类型</strong>：NVMe 或 SCSI 都行，NVMe 略快。</li>
+</ul>
+
+<h3>网络模式怎么选（这一步最容易选错）</h3>
+<ul>
+<li><strong>NAT</strong>（VMnet8）：虚拟机借宿主机上网，宿主机能主动连虚拟机，外网连不进来。<strong>新手建议默认选它</strong>，最省心。</li>
+<li><strong>桥接</strong>（VMnet0）：虚拟机相当于局域网里一台独立机器，和宿主机平级，路由器会给它单独分 IP。适合模拟「真实服务器」或者从别的设备访问它。</li>
+<li><strong>仅主机</strong>（VMnet1）：只能和宿主机通信，完全隔离。适合做实验，不怕污染生产网络。</li>
+</ul>
+<p>NAT 模式默认网段是 192.168.x.0/24，网关是 x.x.x.2，DHCP 从 .128 开始分配。这些可以在「编辑 → 虚拟网络编辑器」里改。</p>
+
+<h3>挂载 ISO</h3>
+<p>在虚拟机设置的「CD/DVD」里选「使用 ISO 映像文件」，指向刚下载的 iso，「启动时连接」要勾上。</p>
+
+<h2>五、安装系统</h2>
+<p>开机后进入安装器，按顺序走：</p>
+<ul>
+<li><strong>语言</strong>：服务器建议选 English。选中文会出现半屏中英混杂，后期 locale 也容易出问题。</li>
+<li><strong>键盘布局</strong>：默认 English (US)。</li>
+<li><strong>安装类型</strong>：Ubuntu Server。</li>
+<li><strong>网络</strong>：默认 DHCP，屏幕会显示分到的 IP，记下来。</li>
+<li><strong>代理</strong>：留空。</li>
+<li><strong>镜像源</strong>：可以在这里直接改成 mirrors.aliyun.com/ubuntu，比装完再改省一步。</li>
+<li><strong>存储</strong>：Use an entire disk，并勾选 Set up this disk as an LVM group。LVM 的好处是以后扩容不用重装。</li>
+<li><strong>用户</strong>：填主机名、用户名、密码。密码别设太简单，后面 sudo 要用。</li>
+<li><strong>SSH</strong>：<strong>务必勾选 Install OpenSSH server</strong>。这一步不勾，装完只能对着 VMware 窗口敲键盘，连复制粘贴都费劲。</li>
+<li><strong>预装软件</strong>：不选，需要什么自己装。</li>
+</ul>
+<p>装完重启。VMware 会提示「请移除安装介质后按回车」，直接回车，它会自动断开 ISO，从硬盘启动。</p>
+
+<h2>六、装完必做的五件事</h2>
+
+<h3>1. 装 open-vm-tools</h3>
+<p>这是 VMware 官方的客户机工具，负责时间同步、关机信号、共享文件夹。</p>
+<pre><code>sudo apt update
+sudo apt install -y open-vm-tools open-vm-tools-desktop</code></pre>
+<p>服务器版装 open-vm-tools 就够；桌面版加上 desktop 包才有剪贴板共享和自适应分辨率。</p>
+
+<h3>2. 换国内 apt 源</h3>
+<p>Ubuntu 24.04 之后源配置改成了 deb822 格式，文件是 /etc/apt/sources.list.d/ubuntu.sources，已经不是以前的 sources.list 了。</p>
+<pre><code>sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak
+sudo sed -i 's|http://archive.ubuntu.com/ubuntu/|https://mirrors.aliyun.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources
+sudo sed -i 's|http://security.ubuntu.com/ubuntu/|https://mirrors.aliyun.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources
+sudo apt update</code></pre>
+
+<h3>3. 配静态 IP（NAT 模式下可选）</h3>
+<p>DHCP 分到的地址每次开机可能变，SSH 客户端就要跟着改配置。把它固定下来：</p>
+<pre><code>sudo nano /etc/netplan/50-cloud-init.yaml</code></pre>
+<pre><code>network:
+  version: 2
+  ethernets:
+    ens33:
+      dhcp4: false
+      addresses:
+        - 192.168.100.10/24
+      routes:
+        - to: default
+          via: 192.168.100.2
+      nameservers:
+        addresses: [223.5.5.5, 119.29.29.29]</code></pre>
+<pre><code>sudo netplan apply</code></pre>
+<p>注意三点：网卡名先用 ip -br a 看一眼，可能是 ens33、ens160 或 ens37；网关填你在「虚拟网络编辑器」里看到的值，不要随手写；gateway4 的写法已经废弃，要用上面的 routes。</p>
+
+<h3>4. 验证 SSH</h3>
+<pre><code>systemctl status ssh
+ip -br a
+ssh 你的用户名@192.168.100.10</code></pre>
+
+<h3>5. 时间同步</h3>
+<pre><code>timedatectl set-ntp true
+timedatectl status</code></pre>
+<p>虚拟机挂起再恢复后时间容易漂，装好 open-vm-tools 一般就正常了。</p>
+
+<h2>七、快照：给自己留一颗后悔药</h2>
+<p>这是虚拟机相对真机最大的好处。</p>
+<ul>
+<li><strong>拍快照</strong>：虚拟机 → 快照 → 拍摄快照。装软件、改配置之前拍一个，改坏了 10 秒回到原样。</li>
+<li><strong>克隆</strong>：虚拟机 → 管理 → 克隆。完整克隆是独立副本，链接克隆省磁盘但依赖父虚拟机。</li>
+</ul>
+<p>一个建议：装完系统、配好网络和 SSH 之后，先拍一个叫「干净系统」的快照，再做其他实验。以后所有乱七八糟的尝试，都从这个快照分叉出去。</p>
+<p><strong>克隆之后记得改机器标识</strong>，否则两台机器的 machine-id 和 IP 会打架：</p>
+<pre><code>sudo rm /etc/machine-id
+sudo systemd-machine-id-setup
+sudo hostnamectl set-hostname node2</code></pre>
+
+<h2>八、常见问题速查</h2>
+
+<h3>提示「此主机支持 Intel VT-x，但 Intel VT-x 处于禁用状态」</h3>
+<p>进 BIOS 打开虚拟化。如果 BIOS 里已经开了还报这个错，检查 Windows 是否开着「内核隔离 → 内存完整性」，把它关掉再重启。</p>
+
+<h3>装完开机黑屏或分辨率不对</h3>
+<p>虚拟机设置里关掉「加速 3D 图形」，显存调到 4 GB 以上。桌面版装完 open-vm-tools-desktop 后分辨率会自适应窗口。</p>
+
+<h3>虚拟机能上网，但宿主机 SSH 连不上</h3>
+<ul>
+<li>确认装系统时勾了 OpenSSH server，或手动补装：sudo apt install -y openssh-server</li>
+<li>确认 NAT 模式下虚拟机 IP 是 192.168.x.x 网段，宿主机连的是这个地址</li>
+<li>Windows 服务里检查「VMware NAT Service」和「VMware DHCP Service」是否在运行，这两个服务挂了 NAT 就废了</li>
+<li>虚拟机里查防火墙：sudo ufw status</li>
+</ul>
+
+<h3>磁盘不够了</h3>
+<p>先在 VMware 里扩容虚拟磁盘，再进系统把分区撑开。用了 LVM 的话：</p>
+<pre><code>sudo growpart /dev/sda 3
+sudo pvresize /dev/sda3
+sudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv
+sudo resize2fs /dev/ubuntu-vg/ubuntu-lv</code></pre>
+
+<h3>复制粘贴和拖拽文件不生效</h3>
+<p>服务器版没有图形界面，本来就没有剪贴板共享，用 SSH 就好。桌面版装 open-vm-tools-desktop 后，在 VMware 设置里把「客户机隔离」的复制粘贴勾上。</p>
+
+<h2>九、小结</h2>
+<p>整个流程可以压缩成一句话：<strong>确认硬件虚拟化 → 装 Workstation → 验镜像 → 自定义建机（NAT）→ 装系统时勾 SSH → 装 open-vm-tools → 拍快照</strong>。</p>
+<p>真正容易出问题的不是安装本身，而是前面几个决定：内存分多少、磁盘放哪、网络用哪种模式、装系统时有没有勾 SSH。这几步想清楚了，后面基本一路顺。</p>
+<p>下一步可以在这台机器上装 Docker 练容器、开三台克隆做集群实验，或者试试 KVM。这些内容后面单独写。</p>
+  <div class="tip">本文同步发布于 iielxy · 记录技术、实践与思考</div>
+</div>
+</body>
+</html>

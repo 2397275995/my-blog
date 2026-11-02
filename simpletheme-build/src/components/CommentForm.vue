@@ -1,0 +1,1491 @@
+﻿<script setup lang="ts">
+/**
+ * CommentForm — 评论输入表单（含 contenteditable 编辑器和表情面板）
+ */
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import CommentCaptcha from '@/components/CommentCaptcha.vue'
+import EmojiPicker from '@/components/EmojiPicker.vue'
+import AppIcon from '@/components/AppIcon.vue'
+import { StButton, StCheckbox, StDrawer, StInput, useToast } from '@/ui'
+import { renderToHtml } from '@/lib/emoji'
+import { fetchCaptcha } from '@/lib/api-comments'
+import type { CommentFormSettings, CaptchaData, UserData } from '@/types/wordpress'
+
+defineOptions({ name: 'CommentForm' })
+
+const props = defineProps<{
+  formSettings: CommentFormSettings
+  currentUser: UserData | null
+  loading?: boolean
+  submitting?: boolean
+  parentCommentId?: number
+}>()
+
+const emit = defineEmits<{
+  (e: 'submit', payload: {
+    name: string; email: string; url: string; content: string; cookies: boolean
+    captchaPayload?: string
+    isPrivate?: boolean; mailNotify?: boolean; useMarkdown?: boolean
+  }): void
+  (e: 'cancel-reply'): void
+}>()
+
+const content = defineModel<string>('content', { default: '' })
+const authorName = defineModel<string>('name', { default: '' })
+const authorEmail = defineModel<string>('email', { default: '' })
+const authorUrl = defineModel<string>('url', { default: '' })
+const cookiesConsent = defineModel<boolean>('cookies', { default: true })
+
+const emojiOpen = ref(false)
+const emojiLeaving = ref(false)
+const emojiTab = ref<'bilibili' | 'tieba' | 'dinosaur' | 'kaomoji'>('bilibili')
+const editorRef = ref<HTMLDivElement | null>(null)
+const emojiPanelRef = ref<HTMLElement | null>(null)
+const isComposing = ref(false)
+const toast = useToast()
+
+// Mobile bottom-sheet state
+const mobileExpanded = ref(false)
+const isMobile = ref(false)
+
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 600
+  if (!isMobile.value) mobileExpanded.value = false
+}
+
+function expandMobile() {
+  if (isMobile.value) {
+    if (props.currentUser || wizardCompleted.value) {
+      mobileExpanded.value = true
+    } else if (!wizardDismissed.value) {
+      // 关闭抽屉时 reka 会把焦点归还给输入框，从而再次触发 @focus → 反复弹窗。
+      // 用 wizardDismissed 屏蔽这类程序化聚焦，仅在真实指针按下时才复位。
+      openWizard()
+    }
+  }
+}
+
+/** 用户主动关闭向导后置位；下一次真实点击（pointerdown）才复位，
+ *  避免关闭时的焦点归还被误判为「首次点击」而无限重开。 */
+const wizardDismissed = ref(false)
+
+function markUserIntent() {
+  wizardDismissed.value = false
+}
+
+function collapseMobile() {
+  if (isMobile.value) {
+    mobileExpanded.value = false
+    emojiOpen.value = false
+    editorRef.value?.blur()
+  }
+}
+
+function onDocumentClick(e: MouseEvent) {
+  if (!isMobile.value || !mobileExpanded.value) return
+  const form = document.querySelector('.comments-form')
+  if (form && !form.contains(e.target as Node)) {
+    collapseMobile()
+  }
+}
+
+// ── Wizard modal state ──
+const wizardActive = ref(false)
+const wizardCompleted = ref(false)
+const wizardStep = ref<'name' | 'email' | 'url' | 'options'>('name')
+const wizardDirection = ref<'forward' | 'backward'>('forward')
+const wizardSteps = computed(() => {
+  const steps: { key: 'name' | 'email' | 'url' | 'options'; title: string; desc: string }[] = [
+    { key: 'name', title: '怎么称呼你？', desc: '输入你想显示的名称' },
+  ]
+  if (props.formSettings.showEmailField) {
+    steps.push({ key: 'email', title: '留下联系方式', desc: '输入邮箱或 QQ 号' })
+  }
+  if (props.formSettings.showUrlField) {
+    steps.push({ key: 'url', title: '你的网站', desc: '输入你的网站地址（可选）' })
+  }
+  steps.push({ key: 'options', title: '选项设置', desc: '设置发布选项并提交' })
+  return steps
+})
+const currentStepIndex = computed(() => wizardSteps.value.findIndex(s => s.key === wizardStep.value))
+const totalWizardSteps = computed(() => wizardSteps.value.length)
+const progressPercent = computed(() => {
+  if (totalWizardSteps.value <= 1) return 100
+  return (currentStepIndex.value / (totalWizardSteps.value - 1)) * 100
+})
+
+// ── 字段校验（邮箱支持 QQ 号，与后端 qqAvatar 的 ^\d{5,} 规则对齐）──
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const QQ_RE = /^\d{5,11}$/
+
+function isValidEmailInput(value: string): boolean {
+  const t = value.trim()
+  return EMAIL_RE.test(t) || QQ_RE.test(t)
+}
+
+function isValidUrlInput(value: string): boolean {
+  const t = value.trim()
+  if (!t) return true
+  try {
+    const u = new URL(/^https?:\/\//i.test(t) ? t : `https://${t}`)
+    return u.hostname.includes('.')
+  } catch {
+    return false
+  }
+}
+
+/** QQ 号 → QQ 邮箱（后端 sanitize_email 会丢弃纯数字） */
+function normalizeEmail(value: string): string {
+  const t = value.trim()
+  return QQ_RE.test(t) ? `${t}@qq.com` : t
+}
+
+/** 缺少协议时自动补全 https:// */
+function normalizeUrl(value: string): string {
+  const t = value.trim()
+  if (!t) return ''
+  return /^https?:\/\//i.test(t) ? t : `https://${t}`
+}
+
+const isStepValid = computed(() => {
+  switch (wizardStep.value) {
+    case 'name': return authorName.value.trim().length > 0
+    case 'email': {
+      const t = authorEmail.value.trim()
+      if (!t) return !props.formSettings.requireNameEmail
+      return isValidEmailInput(t)
+    }
+    case 'url': return isValidUrlInput(authorUrl.value)
+    case 'options': return true
+    default: return true
+  }
+})
+
+// 输入非空但不合法时的内联错误提示
+const wizardStepError = computed(() => {
+  switch (wizardStep.value) {
+    case 'email': {
+      const t = authorEmail.value.trim()
+      return t && !isValidEmailInput(t) ? '请输入正确的邮箱，或 5-11 位 QQ 号' : ''
+    }
+    case 'url': {
+      const t = authorUrl.value.trim()
+      return t && !isValidUrlInput(t) ? '请输入正确的网址，如 example.com' : ''
+    }
+    default: return ''
+  }
+})
+
+// New form fields
+const captchaData = ref<CaptchaData | null>(null)
+const captchaPayload = ref('')
+const isPrivate = ref(false)
+const mailNotify = ref(false)
+const useMarkdown = ref(false)
+
+// ── CAPTCHA ──
+onMounted(async () => {
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
+  document.addEventListener('click', onDocumentClick, true)
+  if (props.formSettings.captchaEnabled && !props.currentUser) {
+    await loadCaptcha()
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', checkMobile)
+  document.removeEventListener('click', onDocumentClick, true)
+})
+
+async function loadCaptcha() {
+  try {
+    captchaData.value = await fetchCaptcha()
+  } catch {
+    captchaData.value = null
+  }
+}
+
+// 验证浮层：点「发表评论」且还没验证过时弹出，验证通过后接着提交
+const captchaOpen = ref(false)
+const pendingSubmit = ref(false)
+
+/** 换一份新鲜挑战后弹出浮层（旧挑战可能已过期或被用过） */
+async function requestCaptcha() {
+  pendingSubmit.value = true
+  await loadCaptcha()
+  captchaOpen.value = true
+}
+
+function onCaptchaVerified(payload: string) {
+  captchaPayload.value = payload
+  captchaOpen.value = false
+  if (pendingSubmit.value) {
+    pendingSubmit.value = false
+    emitSubmit()
+  }
+}
+
+function onCaptchaRefresh() {
+  void loadCaptcha()
+}
+
+// ── contenteditable 输入框 ──
+
+function extractPlainText(): string {
+  const el = editorRef.value
+  if (!el) return ''
+  let text = ''
+  for (const node of el.childNodes) {
+    if (node.nodeType === Node.TEXT_NODE) {
+      text += node.textContent
+    } else if (node instanceof HTMLImageElement) {
+      const type = node.dataset.type
+      const name = node.dataset.name
+      if (type === 'bili' && name) text += `{{${name}}}`
+      else if (type === 'tieba' && name) text += `::${name}::`
+      else if (type === 'dinosaur' && name) text += `#${name}#`
+    }
+  }
+  return text
+}
+
+function saveCursorOffset(): number {
+  const el = editorRef.value
+  const sel = window.getSelection()
+  if (!el || !sel || !sel.rangeCount) return 0
+  const range = sel.getRangeAt(0)
+  const container = range.startContainer
+  if (container === el) {
+    return rawOffsetUpToIndex(el, range.startOffset)
+  }
+  let pos = rawOffsetUpToNode(el, container)
+  if (container.nodeType === Node.TEXT_NODE) {
+    pos += range.startOffset
+  }
+  return pos
+}
+
+function rawOffsetUpToIndex(el: HTMLElement, index: number): number {
+  let pos = 0
+  for (let i = 0; i < index; i++) {
+    const node = el.childNodes[i]
+    if (!node) break
+    if (node.nodeType === Node.TEXT_NODE) {
+      pos += node.textContent?.length ?? 0
+    } else if (node instanceof HTMLImageElement) {
+      const name = node.dataset.name
+      const mlen = name ? name.length + 4 : 0
+      pos += mlen
+    }
+  }
+  return pos
+}
+
+function rawOffsetUpToNode(el: HTMLElement, target: Node): number {
+  let pos = 0
+  for (const node of el.childNodes) {
+    if (node === target) break
+    if (node.nodeType === Node.TEXT_NODE) {
+      pos += node.textContent?.length ?? 0
+    } else if (node instanceof HTMLImageElement) {
+      const name = node.dataset.name
+      const mlen = name ? name.length + 4 : 0
+      pos += mlen
+    }
+  }
+  return pos
+}
+
+function restoreCursorOffset(target: number) {
+  const el = editorRef.value
+  const sel = window.getSelection()
+  if (!el || !sel) return
+  let pos = 0
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_ALL, null)
+  while (walker.nextNode()) {
+    const n = walker.currentNode
+    if (n.nodeType === Node.TEXT_NODE) {
+      const len = n.textContent?.length ?? 0
+      if (pos + len >= target) {
+        const range = document.createRange()
+        range.setStart(n, Math.min(target - pos, len))
+        range.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(range)
+        return
+      }
+      pos += len
+    } else if (n instanceof HTMLImageElement) {
+      const name = n.dataset.name
+      const mlen = name ? name.length + 4 : 0
+      if (pos + mlen >= target) {
+        const range = document.createRange()
+        range.setStartAfter(n)
+        range.collapse(true)
+        sel.removeAllRanges()
+        sel.addRange(range)
+        return
+      }
+      pos += mlen
+    }
+  }
+}
+
+function handleEditorInput() {
+  const el = editorRef.value
+  if (!el) return
+  const raw = extractPlainText()
+  content.value = raw
+
+  // IME composition emits input events before the candidate text is committed.
+  // Replacing innerHTML at that point destroys the browser's composition range
+  // and interrupts Chinese/Japanese/Korean input.
+  if (isComposing.value) return
+
+  const html = renderToHtml(raw)
+  if (el.innerHTML !== html) {
+    const cursor = saveCursorOffset()
+    el.innerHTML = html
+    requestAnimationFrame(() => restoreCursorOffset(cursor))
+  }
+}
+
+function handleCompositionStart() {
+  isComposing.value = true
+}
+
+function handleCompositionEnd() {
+  isComposing.value = false
+  handleEditorInput()
+}
+
+function insertEmoji(text: string) {
+  const el = editorRef.value
+  if (!el) {
+    content.value += text
+    return
+  }
+  el.focus()
+  const cursor = saveCursorOffset()
+  const raw = extractPlainText()
+  const before = raw.substring(0, cursor)
+  const after = raw.substring(cursor)
+  const newRaw = before + text + after
+  content.value = newRaw
+  el.innerHTML = renderToHtml(newRaw)
+  const newCursor = cursor + text.length
+  requestAnimationFrame(() => restoreCursorOffset(newCursor))
+}
+
+function toggleEmoji() {
+  emojiOpen.value = !emojiOpen.value
+}
+
+function onEmojiBeforeLeave() {
+  emojiLeaving.value = true
+}
+
+function onEmojiAfterLeave() {
+  emojiLeaving.value = false
+}
+
+// ── Wizard modal functions ──
+
+function openWizard() {
+  wizardDirection.value = 'forward'
+  wizardStep.value = 'name'
+  emojiOpen.value = false
+  wizardActive.value = true
+}
+
+function closeWizard() {
+  wizardActive.value = false
+}
+
+function nextStep() {
+  const idx = currentStepIndex.value
+  if (idx < totalWizardSteps.value - 1) {
+    wizardDirection.value = 'forward'
+    wizardStep.value = wizardSteps.value[idx + 1]!.key
+  }
+}
+
+function prevStep() {
+  const idx = currentStepIndex.value
+  if (idx > 0) {
+    wizardDirection.value = 'backward'
+    wizardStep.value = wizardSteps.value[idx - 1]!.key
+  }
+}
+
+function finishWizard() {
+  wizardCompleted.value = true
+  wizardActive.value = false
+  mobileExpanded.value = true
+}
+
+function focusWizardInput() {
+  nextTick(() => {
+    const el = document.querySelector<HTMLInputElement>(
+      '.wizard-step .comments-form__input input, .wizard-step input.comments-form__input',
+    )
+    el?.focus()
+  })
+}
+
+watch(wizardStep, () => {
+  focusWizardInput()
+})
+
+// reka 打开时会把焦点交给首个可聚焦元素（关闭按钮），此处抢回输入框
+watch(wizardActive, (active) => {
+  if (active) {
+    requestAnimationFrame(() => focusWizardInput())
+  } else {
+    // 向导关闭（关闭按钮 / ESC / 遮罩）后屏蔽焦点归还导致的重复弹出
+    wizardDismissed.value = true
+  }
+})
+
+function clearForm() {
+  content.value = ''
+  if (editorRef.value) editorRef.value.innerHTML = ''
+  captchaPayload.value = ''
+  isPrivate.value = false
+  mailNotify.value = false
+  useMarkdown.value = true
+  closeWizard()
+  collapseMobile()
+  if (props.formSettings.captchaEnabled && !props.currentUser) {
+    void loadCaptcha()
+  }
+}
+
+function handleSubmit() {
+  // 提交前校验 + 规范化（桌面内联表单和移动端向导都走这里）
+  if (!props.currentUser) {
+    const email = authorEmail.value.trim()
+    if (props.formSettings.showEmailField && email && !isValidEmailInput(email)) {
+      toast.error('邮箱格式不正确，请输入邮箱或 5-11 位 QQ 号')
+      return
+    }
+    if (props.formSettings.showUrlField && !isValidUrlInput(authorUrl.value)) {
+      toast.error('网址格式不正确')
+      return
+    }
+    if (props.formSettings.captchaEnabled && !captchaPayload.value) {
+      void requestCaptcha()
+      return
+    }
+  }
+  emitSubmit()
+}
+
+function emitSubmit() {
+  const payload: {
+    name: string; email: string; url: string; content: string; cookies: boolean
+    captchaPayload?: string
+    isPrivate?: boolean; mailNotify?: boolean; useMarkdown?: boolean
+  } = {
+    name: authorName.value.trim(),
+    email: normalizeEmail(authorEmail.value),
+    url: normalizeUrl(authorUrl.value),
+    content: content.value,
+    cookies: cookiesConsent.value,
+    isPrivate: isPrivate.value,
+    mailNotify: mailNotify.value,
+    useMarkdown: useMarkdown.value,
+  }
+  if (props.formSettings.captchaEnabled && captchaPayload.value) {
+    payload.captchaPayload = captchaPayload.value
+    // 服务端按一次性 payload 校验（用完即弃、还有防重放 transient），
+    // 留着重试只会被判定 captcha_failed，直接清掉让用户重新验证
+    captchaPayload.value = ''
+  }
+  emit('submit', payload)
+}
+
+defineExpose({ clearForm })
+</script>
+
+<template>
+
+  <!-- 移动端 Teleport 到 body：祖先（如 .content-view 的路由过渡 transform）
+       会让 position:fixed 相对祖先定位而非视口，导致底部栏错位 -->
+  <Teleport to="body" :disabled="!isMobile">
+  <form
+    class="comments-form"
+    :class="{
+      'comments-form--expanded': mobileExpanded,
+      'comments-form--emoji-open': isMobile && (emojiOpen || emojiLeaving),
+      'comments-form--mobile': isMobile
+    }"
+    @submit.prevent="handleSubmit"
+  >
+    <!-- Reply indicator -->
+    <div v-if="parentCommentId" class="comments-replying">
+      正在回复 <strong>#{{ parentCommentId }}</strong>
+      <StButton text size="tiny" @click="emit('cancel-reply')">取消</StButton>
+    </div>
+
+    <!-- Input row: textarea + collapsed actions (inline on mobile) -->
+    <div class="comments-form__input-row">
+      <!--
+        保留原生 contenteditable：评论正文需要 Markdown/表情实时渲染与
+        placeholder 伪元素控制，不是 StTextarea 能表达的多行纯文本输入。
+      -->
+      <div
+        ref="editorRef"
+        contenteditable
+        class="comments-form__textarea"
+        :class="{
+          'comments-form__textarea--empty': !content,
+          'comments-form__textarea--collapsed': isMobile && !mobileExpanded
+        }"
+        :data-placeholder="parentCommentId ? '写下回复...' : '写下评论...'"
+        role="textbox"
+        aria-multiline="true"
+        @input="handleEditorInput"
+        @compositionstart="handleCompositionStart"
+        @compositionend="handleCompositionEnd"
+        @pointerdown="markUserIntent"
+        @focus="expandMobile"
+        @click="expandMobile"
+      ></div>
+    </div>
+
+    <!-- Expandable section (above emoji panel on mobile) -->
+    <div class="comments-form__expandable" :class="{ 'comments-form__expandable--open': !isMobile || mobileExpanded }">
+      <div class="comments-form__expandable-inner">
+      <div v-if="currentUser" class="comments-form__logged-in">
+        <AppIcon name="user" :size="16" />
+        <span>已登录为 <strong>{{ currentUser.displayName }}</strong></span>
+      </div>
+      <div v-else-if="!isMobile" class="comments-form__row">
+        <StInput
+          v-model="authorName"
+          class="comments-form__input"
+          placeholder="昵称 *"
+          :maxlength="40"
+          required
+        />
+        <StInput
+          v-if="formSettings.showEmailField"
+          v-model="authorEmail"
+          class="comments-form__input"
+          placeholder="邮箱 * (支持 QQ 号)"
+          :maxlength="80"
+          :required="formSettings.requireNameEmail"
+        />
+        <StInput
+          v-if="formSettings.showUrlField"
+          v-model="authorUrl"
+          class="comments-form__input"
+          type="url"
+          placeholder="网站"
+          :maxlength="120"
+        />
+      </div>
+
+      <div class="comments-form__options">
+        <StCheckbox
+          v-if="formSettings.showPrivateOption !== false"
+          v-model="isPrivate"
+          class="comments-form__option"
+          size="small"
+          title="评论仅博主和你不见"
+        >
+          悄悄话
+        </StCheckbox>
+        <StCheckbox
+          v-if="parentCommentId"
+          v-model="mailNotify"
+          class="comments-form__option"
+          size="small"
+          title="有回复时邮件通知你"
+        >
+          邮件提醒
+        </StCheckbox>
+        <StCheckbox
+          v-if="formSettings.showMarkdownOption !== false && !isMobile"
+          v-model="useMarkdown"
+          class="comments-form__option"
+          size="small"
+          title="启用 Markdown 格式"
+        >
+          Markdown
+        </StCheckbox>
+        <StCheckbox
+          v-if="formSettings.showCookiesOptIn && !currentUser"
+          v-model="cookiesConsent"
+          class="comments-form__option"
+          size="small"
+          title="记住信息"
+        >
+          记住信息
+        </StCheckbox>
+      </div>
+
+      <div class="comments-form__footer">
+        <div class="comments-form__footer-right">
+          <CommentCaptcha
+            v-if="formSettings.captchaEnabled && !currentUser"
+            v-model:show="captchaOpen"
+            :challenge="captchaData"
+            @verified="onCaptchaVerified"
+            @refresh="onCaptchaRefresh"
+          />
+          <!-- Desktop emoji panel (dropdown above toggle) -->
+          <div v-if="!isMobile && emojiOpen" ref="emojiPanelRef" class="emoji-panel-wrapper emoji-panel-wrapper--dropdown">
+            <EmojiPicker
+              v-model:tab="emojiTab"
+              @select="insertEmoji"
+            />
+          </div>
+          <StButton
+            quaternary
+            circle
+            :size="isMobile ? 'large' : 'medium'"
+            title="表情"
+            aria-label="表情"
+            @click="toggleEmoji"
+          >
+            <template #icon>
+              <AppIcon name="smile" :size="isMobile ? 22 : 20" />
+            </template>
+          </StButton>
+          <StButton
+            attr-type="submit"
+            type="primary"
+            :round="isMobile"
+            :size="isMobile ? 'large' : 'medium'"
+            :disabled="submitting || loading"
+          >
+            {{ submitting ? '提交中...' : '发表评论' }}
+          </StButton>
+        </div>
+      </div>
+      </div>
+    </div>
+
+    <!-- Mobile emoji panel (below expandable section) -->
+    <Transition name="emoji-slide" @before-leave="onEmojiBeforeLeave" @after-leave="onEmojiAfterLeave">
+      <div v-if="isMobile && emojiOpen" class="emoji-panel-wrapper emoji-panel-wrapper--inline">
+        <EmojiPicker
+          v-model:tab="emojiTab"
+          @select="insertEmoji"
+        />
+      </div>
+    </Transition>
+  </form>
+  </Teleport>
+
+  <!-- Mobile wizard modal：外壳（遮罩 / 焦点陷阱 / ESC / 滚动锁定 / 关闭按钮）
+       由 StDrawer 提供，本组件只保留多步表单与方向滑动切换 -->
+  <StDrawer v-model:show="wizardActive" placement="bottom" title="完善评论信息">
+    <!-- 顶部进度条：贴抽屉顶部 -->
+    <div class="wizard-progress-bar">
+      <div class="wizard-progress-bar__fill" :style="{ width: progressPercent + '%' }"></div>
+    </div>
+
+    <!-- Step content with directional slide -->
+    <Transition
+      :name="wizardDirection === 'forward' ? 'wizard-slide-fwd' : 'wizard-slide-bwd'"
+      mode="out-in"
+    >
+      <div :key="wizardStep" class="wizard-step">
+        <!-- Step 1: name -->
+        <template v-if="wizardStep === 'name'">
+          <div class="wizard-step__icon">
+            <AppIcon name="user" :size="28" :stroke="1.8" />
+          </div>
+          <h3 class="wizard-step__title">怎么称呼你？</h3>
+          <p class="wizard-step__desc">输入你想显示的名称</p>
+          <div class="wizard-step__field">
+            <StInput
+              v-model="authorName"
+              :size="isMobile ? 'large' : 'medium'"
+              placeholder="输入昵称"
+              :maxlength="40"
+              @enter="isStepValid && nextStep()"
+            />
+          </div>
+        </template>
+
+        <!-- Step 2: email -->
+        <template v-else-if="wizardStep === 'email'">
+          <div class="wizard-step__icon">
+            <AppIcon name="mail" :size="28" :stroke="1.8" />
+          </div>
+          <h3 class="wizard-step__title">留下联系方式</h3>
+          <p class="wizard-step__desc">方便博主与你联系</p>
+          <div class="wizard-step__field">
+            <StInput
+              v-model="authorEmail"
+              :size="isMobile ? 'large' : 'medium'"
+              :status="wizardStepError ? 'error' : undefined"
+              placeholder="输入邮箱或 QQ 号"
+              :maxlength="80"
+              @enter="isStepValid && nextStep()"
+            />
+            <p v-if="wizardStepError" class="wizard-step__error">{{ wizardStepError }}</p>
+          </div>
+        </template>
+
+        <!-- Step 3: url -->
+        <template v-else-if="wizardStep === 'url'">
+          <div class="wizard-step__icon">
+            <AppIcon name="link" :size="28" :stroke="1.8" />
+          </div>
+          <h3 class="wizard-step__title">你的网站</h3>
+          <p class="wizard-step__desc">可选，点击头像时会用到</p>
+          <div class="wizard-step__field">
+            <StInput
+              v-model="authorUrl"
+              type="url"
+              :size="isMobile ? 'large' : 'medium'"
+              :status="wizardStepError ? 'error' : undefined"
+              placeholder="输入你的网站地址"
+              :maxlength="120"
+              @enter="isStepValid && nextStep()"
+            />
+            <p v-if="wizardStepError" class="wizard-step__error">{{ wizardStepError }}</p>
+          </div>
+        </template>
+
+        <!-- Step 4: options + finish -->
+        <template v-else>
+          <div class="wizard-step__icon">
+            <AppIcon name="settings" :size="28" :stroke="1.8" />
+          </div>
+          <h3 class="wizard-step__title">选项设置</h3>
+          <p class="wizard-step__desc">配置你的发布偏好</p>
+          <div class="wizard-step__options">
+            <StCheckbox
+              v-if="formSettings.showPrivateOption !== false"
+              v-model="isPrivate"
+              class="wizard-step__option"
+              aria-label="悄悄话，仅博主和你可见"
+            >
+              <span class="wizard-step__option-text">
+                <span class="wizard-step__option-label">悄悄话</span>
+                <span class="wizard-step__option-hint">仅博主和你可见</span>
+              </span>
+            </StCheckbox>
+            <StCheckbox
+              v-if="parentCommentId"
+              v-model="mailNotify"
+              class="wizard-step__option"
+              aria-label="邮件提醒，有回复时通知你"
+            >
+              <span class="wizard-step__option-text">
+                <span class="wizard-step__option-label">邮件提醒</span>
+                <span class="wizard-step__option-hint">有回复时通知你</span>
+              </span>
+            </StCheckbox>
+            <StCheckbox
+              v-if="formSettings.showMarkdownOption !== false"
+              v-model="useMarkdown"
+              class="wizard-step__option"
+              aria-label="Markdown，使用 Markdown 格式"
+            >
+              <span class="wizard-step__option-text">
+                <span class="wizard-step__option-label">Markdown</span>
+                <span class="wizard-step__option-hint">使用 Markdown 格式</span>
+              </span>
+            </StCheckbox>
+            <StCheckbox
+              v-if="formSettings.showCookiesOptIn && !currentUser"
+              v-model="cookiesConsent"
+              class="wizard-step__option"
+              aria-label="记住信息，保存昵称、邮箱等信息"
+            >
+              <span class="wizard-step__option-text">
+                <span class="wizard-step__option-label">记住信息</span>
+                <span class="wizard-step__option-hint">保存昵称、邮箱等信息</span>
+              </span>
+            </StCheckbox>
+          </div>
+        </template>
+      </div>
+    </Transition>
+
+    <!-- Navigation -->
+    <template #footer>
+      <div class="wizard-nav">
+        <StButton
+          v-if="currentStepIndex > 0"
+          :size="isMobile ? 'large' : 'medium'"
+          @click="prevStep"
+        >
+          <template #icon><AppIcon name="arrow-left" :size="16" :stroke="2.5" /></template>
+          上一步
+        </StButton>
+        <StButton
+          v-if="currentStepIndex < totalWizardSteps - 1"
+          type="primary"
+          :size="isMobile ? 'large' : 'medium'"
+          :disabled="!isStepValid"
+          @click="nextStep"
+        >
+          <template #icon><AppIcon name="arrow-right" :size="16" :stroke="2.5" /></template>
+          下一步
+        </StButton>
+        <StButton
+          v-else
+          type="primary"
+          :size="isMobile ? 'large' : 'medium'"
+          @click="finishWizard"
+        >
+          <template #icon><AppIcon name="check" :size="16" :stroke="2.5" /></template>
+          完成
+        </StButton>
+      </div>
+    </template>
+  </StDrawer>
+</template>
+
+<style scoped>
+/* ── Desktop base styles ── */
+
+.comments-form {
+  position: relative;
+}
+
+.comments-form__textarea {
+  width: 100%;
+  min-height: 80px;
+  max-height: 400px;
+  padding: 10px 12px 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--foreground);
+  background: var(--st-input-fill);
+  border: 1px solid var(--st-input-border-color);
+  border-radius: var(--radius-medium);
+  font-family: inherit;
+  transition:
+    border-color 0.3s var(--ease-in-out),
+    background-color 0.3s var(--ease-in-out),
+    box-shadow 0.3s var(--ease-in-out);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  -webkit-user-modify: read-write-plaintext-only;
+}
+
+.comments-form__textarea:focus {
+  outline: none;
+  border-color: var(--st-input-border-focus);
+  background: var(--st-input-fill-focus);
+  box-shadow: var(--st-input-shadow-focus);
+}
+
+.comments-form__textarea--empty::before {
+  content: attr(data-placeholder);
+  color: var(--st-placeholder);
+  pointer-events: none;
+}
+
+.comments-form__logged-in {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+.comments-form__row {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comments-form__input {
+  flex: 1;
+}
+
+.comments-form__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+.comments-form__option {
+  cursor: pointer;
+  margin: 0;
+}
+
+.comments-form__captcha {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.comments-replying {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 8px 12px;
+  background: var(--accent);
+  border-radius: var(--radius-medium, 6px);
+  font-size: 13px;
+  color: var(--secondary);
+}
+
+.comments-form__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.comments-form__footer-right {
+  /* 表情弹窗（.comments-emoji absolute）的定位锚点 — 悬浮在按钮组上方右对齐 */
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 桌面 dropdown 包装器保持 static，避免成为零尺寸锚点；
+   面板实际锚到 .comments-form__footer-right */
+
+/* ── Mobile layout (fixed bottom) ── */
+/* 收起时容器为不透明页面背景色，与页面无缝融合；展开/表情面板才出现卡片面板 */
+.comments-form--mobile {
+  position: fixed !important;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 500;
+  background: var(--card);
+  padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 8px) 0;
+  max-height: 50vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+.comments-form--mobile.comments-form--expanded,
+.comments-form--mobile.comments-form--emoji-open {
+  background: var(--card);
+  border-top: 1px solid var(--border);
+  border-radius: 16px 16px 0 0;
+  box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* ── Mobile bottom sheet (≤600px) ── */
+
+.comments-form__expandable {
+  /* Desktop: always fully visible */
+  max-height: none;
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (min-width: 601px) {
+  .comments-form__expandable {
+    display: block;
+    overflow: visible;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .comments-form {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 500;
+    background: var(--card);
+    padding: 0 0 calc(env(safe-area-inset-bottom, 0px) + 8px) 0;
+    max-height: 50vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    box-sizing: border-box;
+  }
+
+  .comments-form--expanded,
+  .comments-form--emoji-open {
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.08);
+  }
+
+  .comments-form--expanded {
+    max-height: 85vh;
+  }
+
+  .comments-form--emoji-open {
+    height: auto !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+    max-height: 85vh;
+  }
+
+  .comments-form--emoji-open .emoji-panel-wrapper--inline {
+    height: 45vh;
+    max-height: 300px;
+    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+  }
+
+  .comments-form--emoji-open .comments-form__input-row {
+    flex-shrink: 0;
+  }
+
+  .comments-form--emoji-open .comments-form__expandable {
+    flex-shrink: 0;
+    min-height: 0;
+  }
+
+  .comments-form--emoji-open > * {
+    margin: 0;
+  }
+
+  /* ── Handle bar ── */
+	  /* ── Input row: textarea + buttons in flex row ── */
+  .comments-form__input-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 0;
+  }
+
+  /* ── Collapsed textarea: compact outline pill ── */
+  .comments-form__textarea--collapsed {
+    min-height: 34px;
+    max-height: 34px;
+    height: 34px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 5px 14px;
+    flex: 1;
+    border-radius: 17px;
+    margin-bottom: 0;
+    background: var(--st-input-fill);
+    border: 1px solid var(--st-input-border-color);
+    line-height: 22px;
+    font-size: 13px;
+  }
+
+  /* ── Expanded textarea: normal multi-line ── */
+  .comments-form--expanded .comments-form__input-row {
+    display: block;
+  }
+  .comments-form--expanded .comments-form__textarea {
+    min-height: 80px;
+    max-height: 200px;
+    white-space: pre-wrap;
+    padding: 10px 12px 6px;
+    margin: 6px 0 0;
+    width: auto;
+    flex: none;
+  }
+
+  /* ── Emoji toggle button ── */
+
+  	  /* ── Expandable section (mobile QQ-style) ── */
+	  .comments-form__expandable {
+	    display: grid;
+	    grid-template-rows: 0fr;
+	    overflow: hidden;
+	    opacity: 0;
+	    transform: translateY(8px);
+	    transition: grid-template-rows 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+	                opacity 0.25s ease,
+	                transform 0.25s ease;
+	    pointer-events: none;
+	  }
+
+	  .comments-form__expandable--open {
+	    grid-template-rows: 1fr;
+	    opacity: 1;
+	    transform: translateY(0);
+	    pointer-events: auto;
+	  }
+
+	  .comments-form__expandable-inner {
+	    min-height: 0;
+	    padding: 8px 14px 4px;
+	    display: flex;
+	    flex-direction: column;
+	    gap: 10px;
+	  }
+
+	  /* ── Stack inputs vertically ── */
+	  .comments-form__expandable-inner > .comments-form__row {
+	    display: flex;
+	    flex-direction: column;
+	    gap: 8px;
+	    flex: none;
+	    margin: 0;
+	  }
+
+	  .comments-form__expandable-inner .comments-form__input {
+	    width: 100%;
+	    box-sizing: border-box;
+	    padding: 12px 14px;
+	    font-size: 15px;
+	    border-radius: var(--radius-medium);
+	  }
+
+	  /* ── Logged-in badge ── */
+	  .comments-form__expandable-inner > .comments-form__logged-in {
+	    margin: 0;
+	    padding: 2px 0;
+	  }
+
+	  /* ── Options as chip-style toggles ── */
+	  .comments-form__expandable-inner > .comments-form__options {
+	    display: flex;
+	    flex-wrap: wrap;
+	    gap: 8px;
+	    flex: none;
+	    margin: 0;
+	  }
+
+	  .comments-form__expandable-inner .comments-form__option {
+	      position: relative;
+	      display: inline-flex;
+	      align-items: center;
+	      gap: 4px;
+	      padding: 4px 10px;
+	      border-radius: 8px;
+	      font-size: 13px;
+	      background: var(--muted);
+	      cursor: pointer;
+	      transition: all 0.15s;
+	      user-select: none;
+	      margin: 0;
+	      min-height: 28px;
+	    }
+
+	  .comments-form__expandable-inner .comments-form__option .st-checkbox__box {
+	      display: none;
+	    }
+
+	  /* 芯片形态没有勾选框，选中态由 StCheckbox 的 is-checked 驱动 */
+	  .comments-form__expandable-inner .comments-form__option.is-checked {
+	      background: color-mix(in srgb, var(--primary) 15%, transparent);
+	      color: var(--primary);
+	    }
+
+	  .comments-form__expandable-inner .comments-form__option span {
+	      font-size: 12px;
+	    }
+
+	  /* ── Captcha ── */
+	  .comments-form__expandable-inner > .comments-form__captcha {
+	    display: flex;
+	    align-items: center;
+	    gap: 8px;
+	    flex: none;
+	    margin: 0;
+	  }
+
+	  .comments-form__expandable-inner .comments-form__captcha-question {
+	    font-size: 14px;
+	    font-weight: 600;
+	    padding: 8px 12px;
+	    background: var(--muted);
+	    border-radius: 8px;
+	    white-space: nowrap;
+	    flex-shrink: 0;
+	  }
+
+	  .comments-form__expandable-inner .comments-form__captcha-input {
+	    max-width: 100px;
+	  }
+
+	  /* ── Footer toolbar ── */
+	  .comments-form__expandable-inner > .comments-form__footer {
+	    display: flex;
+	    align-items: center;
+	    justify-content: space-between;
+	    margin: 2px 0 0;
+	    flex: none;
+	    padding: 0;
+	  }
+
+	  .comments-form__expandable-inner .comments-form__footer-right {
+	    display: flex;
+	    align-items: center;
+	    gap: 6px;
+	    width: 100%;
+	    justify-content: flex-end;
+	  }
+
+		  /* ── Mobile emoji panel (inline inside form, full width) ── */
+		  .emoji-panel-wrapper--inline {
+		    padding: 0;
+		    flex-shrink: 0;
+		  }
+
+		  /* Reply indicator spacing */
+		  .comments-replying {
+		    margin: 4px 12px 8px;
+		  }
+		}
+
+.emoji-slide-enter-active {
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.emoji-slide-leave-active {
+  transition: all 0.2s ease;
+}
+.emoji-slide-enter-from {
+  opacity: 0;
+  transform: translateY(20px);
+}
+.emoji-slide-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+/* ── Wizard Drawer（外壳由 StDrawer 提供，此处只保留内容排版） ── */
+
+/* 顶部进度条：抽屉内首个元素，占满宽度。
+ * 轨道透明：第 0 步时不应留下一条通栏灰线（易被误认为分割线），
+ * 只保留主色进度填充，随步骤推进生长。 */
+.wizard-progress-bar {
+  height: 3px;
+  margin: -16px -16px 16px;
+  background: transparent;
+}
+
+.wizard-progress-bar__fill {
+  height: 100%;
+  background: var(--primary);
+  transition: width 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  border-radius: 0 2px 2px 0;
+}
+
+/* ── Step content ── */
+
+.wizard-step {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (max-width: 500px) {
+  .wizard-step {
+    min-height: 140px;
+  }
+}
+
+.wizard-step__icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--muted);
+  border-radius: 12px;
+  margin-bottom: 14px;
+  color: var(--primary);
+}
+
+.wizard-step__title {
+  font-size: 1.3rem;
+  font-weight: 650;
+  color: var(--foreground);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
+}
+
+.wizard-step__desc {
+  font-size: 0.85rem;
+  color: var(--secondary);
+  margin: 0 0 22px;
+  line-height: 1.5;
+}
+
+.wizard-step__field {
+  /* Input wrapper */
+}
+
+.wizard-step__error {
+  margin: 8px 2px 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--danger, #dd2424);
+}
+
+/* ── Options (step 4) ── */
+
+.wizard-step__options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.wizard-step__option {
+  padding: 10px 12px;
+  background: var(--faint);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s;
+  margin: 0;
+}
+
+.wizard-step__option:hover {
+  background: var(--muted);
+}
+
+.wizard-step__option-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.wizard-step__option-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--foreground);
+}
+
+.wizard-step__option-hint {
+  font-size: 12px;
+  color: var(--secondary);
+  opacity: 0.75;
+}
+
+/* ── Captcha ── */
+
+.wizard-step__captcha {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wizard-step__captcha-question {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--foreground);
+  white-space: nowrap;
+  padding: 8px 12px;
+  background: var(--muted);
+  border-radius: 8px;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.wizard-step__captcha-input {
+  max-width: 110px;
+}
+
+/* ── Navigation（置于 StDrawer footer 插槽内） ── */
+
+.wizard-nav {
+  display: flex;
+  width: 100%;
+  gap: 12px;
+}
+
+/* 按钮外观与状态由 StButton 提供；此处只保留向导导航的几何排布：
+   最后一个可见按钮是主操作，靠右对齐；移动端两个按钮等宽撑满触控区。 */
+.wizard-nav > :last-child {
+  margin-left: auto;
+}
+
+@media (max-width: 500px) {
+  .wizard-nav {
+    gap: 10px;
+  }
+
+  .wizard-nav > * {
+    flex: 1;
+    min-height: 44px;
+  }
+}
+
+/* ── Dark-mode glass consistency ── */
+
+body[data-theme='dark'] .wizard-step__option {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+body[data-theme='dark'] .wizard-step__option:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ── Dark mode: 收起胶囊描边 ── */
+body[data-theme='dark'] .comments-form__textarea--empty.comments-form__textarea--collapsed:focus {
+  background: var(--st-input-fill-focus);
+}
+
+/* ── Dark mode: 展开/表情面板 ── */
+body[data-theme='dark'] .comments-form--mobile.comments-form--expanded,
+body[data-theme='dark'] .comments-form--mobile.comments-form--emoji-open {
+  background: var(--card);
+  border-top-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.35);
+}
+
+/* ── Transitions ── */
+
+/* Slide forward: new from right, old to left */
+.wizard-slide-fwd-enter-active {
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wizard-slide-fwd-leave-active {
+  transition: all 0.18s ease;
+}
+
+.wizard-slide-fwd-enter-from {
+  opacity: 0;
+  transform: translateX(35px);
+}
+
+.wizard-slide-fwd-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* Slide backward: new from left, old to right */
+.wizard-slide-bwd-enter-active {
+  transition: all 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wizard-slide-bwd-leave-active {
+  transition: all 0.18s ease;
+}
+
+.wizard-slide-bwd-enter-from {
+  opacity: 0;
+  transform: translateX(-35px);
+}
+
+.wizard-slide-bwd-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+/* ── Dark mode ── */
+
+body[data-theme='dark'] .wizard-mask {
+  background: rgba(0, 0, 0, 0.7);
+}
+</style>

@@ -1,0 +1,141 @@
+<script setup lang="ts">
+import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { RouterLink, useRoute } from 'vue-router'
+import { isExternalUrl, isSafeNavigationUrl } from '@/lib/theme-config'
+import { resolveMenuIcon } from './icon-map'
+import AppIcon from '@/components/AppIcon.vue'
+import { StMorphIcon, StTooltip } from '@/ui'
+import type { MenuItem } from '@/types/wordpress'
+
+const props = defineProps<{
+  menuItems: MenuItem[]
+  openMenus: Set<number>
+}>()
+
+const emit = defineEmits<{
+  'toggle-sub-menu': [id: number]
+}>()
+
+const route = useRoute()
+
+/**
+ * 窄屏（< 1200px）时菜单项标题以图标下方小字展示，无需再做悬停提示。
+ * 与 sidebar.css 里标题切换的断点保持一致。
+ */
+const isNarrow = ref(false)
+let narrowQuery: MediaQueryList | null = null
+function syncNarrow(e?: MediaQueryListEvent) {
+  isNarrow.value = e ? e.matches : !!narrowQuery?.matches
+}
+onMounted(() => {
+  narrowQuery = window.matchMedia('(max-width: 1199.98px)')
+  syncNarrow()
+  narrowQuery.addEventListener('change', syncNarrow)
+})
+onUnmounted(() => narrowQuery?.removeEventListener('change', syncNarrow))
+
+function isCurrent(path: string): boolean {
+  return route.path === path
+}
+
+function isHome(url: string): boolean {
+  return url === '/' || url === ''
+}
+
+function hasChildren(item: MenuItem): boolean {
+  return !!(item.children && item.children.length > 0)
+}
+
+const safeMenuItems = computed(() =>
+  props.menuItems.filter((item) => hasChildren(item) || isSafeNavigationUrl(item.url)),
+)
+</script>
+
+<template>
+  <nav class="left-sidebar__menu">
+    <ul>
+      <li
+        v-for="(item, index) in safeMenuItems"
+        :key="item.id"
+        :data-menu-id="item.id"
+        :style="{ '--st-menu-index': index }"
+        :class="{
+          'current-menu-item': !hasChildren(item) && isCurrent(item.path),
+          'menu-item-has-children': hasChildren(item),
+          'menu-item-open': openMenus.has(item.id)
+        }"
+      >
+        <!-- 有子菜单项：切换按钮（浮动面板由 LeftSidebar 渲染）
+             保留原生 <button>：与同级 RouterLink 共用 图标+标题+chevron 布局，
+             样式由全局 src/styles/sidebar.css 的 .menu-toggle 驱动。 -->
+        <template v-if="hasChildren(item)">
+          <button
+            class="menu-toggle"
+            @click="emit('toggle-sub-menu', item.id)"
+            :aria-expanded="openMenus.has(item.id)"
+          >
+            <AppIcon v-bind="resolveMenuIcon(item)" class="menu-icon" />
+            <span class="menu-item-title">{{ item.title }}</span>
+            <StMorphIcon
+              class="sub-menu-chevron"
+              :name="openMenus.has(item.id) ? 'chevron-up' : 'chevron-down'"
+              :size="10"
+              :stroke="3"
+              spring="smooth"
+            />
+          </button>
+        </template>
+
+        <!-- 无子菜单项：普通链接，窄屏标题在图标下方，宽屏用 StTooltip 悬停提示 -->
+        <StTooltip
+          v-else-if="isSafeNavigationUrl(item.url) && !isExternalUrl(item.url) && !isHome(item.url)"
+          :content="item.title"
+          placement="right"
+          :disabled="isNarrow"
+          :side-offset="10"
+        >
+          <RouterLink
+            :to="item.path || item.url"
+            :target="item.target !== '_self' ? item.target : undefined"
+            :aria-current="isCurrent(item.path) ? 'page' : undefined"
+          >
+            <AppIcon v-bind="resolveMenuIcon(item, isCurrent(item.path))" class="menu-icon" />
+            <span class="menu-item-title">{{ item.title }}</span>
+          </RouterLink>
+        </StTooltip>
+        <StTooltip
+          v-else-if="isSafeNavigationUrl(item.url) && !isExternalUrl(item.url) && isHome(item.url)"
+          :content="item.title"
+          placement="right"
+          :disabled="isNarrow"
+          :side-offset="10"
+        >
+          <RouterLink
+            to="/"
+            :target="item.target !== '_self' ? item.target : undefined"
+            :aria-current="isCurrent('/') ? 'page' : undefined"
+          >
+            <AppIcon v-bind="resolveMenuIcon(item, isCurrent('/'))" class="menu-icon" />
+            <span class="menu-item-title">{{ item.title }}</span>
+          </RouterLink>
+        </StTooltip>
+        <StTooltip
+          v-else-if="isSafeNavigationUrl(item.url)"
+          :content="item.title"
+          placement="right"
+          :disabled="isNarrow"
+          :side-offset="10"
+        >
+          <a
+            :href="item.url"
+            :target="item.target || '_self'"
+            rel="noreferrer noopener"
+          >
+            <AppIcon v-bind="resolveMenuIcon(item)" class="menu-icon" />
+            <span class="menu-item-title">{{ item.title }}</span>
+          </a>
+        </StTooltip>
+      </li>
+    </ul>
+  </nav>
+</template>

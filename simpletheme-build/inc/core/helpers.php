@@ -1,0 +1,328 @@
+<?php
+/**
+ * Utility Helpers
+ *
+ * @package SimpleTheme
+ *
+ * @license MIT
+ */
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+// ========== Option Read/Write ==========
+
+function simple_theme_option( $key = '', $default = null ) {
+	$cache = get_option( 'simple_theme_options', array() );
+	if ( '' === $key ) {
+		return $cache;
+	}
+	return isset( $cache[ $key ] ) ? $cache[ $key ] : $default;
+}
+
+function simple_theme_update_option( $key, $value ) {
+	$options = get_option( 'simple_theme_options', array() );
+	$options[ $key ] = $value;
+	update_option( 'simple_theme_options', $options, false );
+}
+
+function simple_theme_update_options( $data ) {
+	$options = get_option( 'simple_theme_options', array() );
+	$options = array_merge( $options, $data );
+	update_option( 'simple_theme_options', $options, false );
+}
+
+// ========== Sanitize Helpers ==========
+
+function simple_theme_sanitize_choice( $value, array $allowed, $default ) {
+	return in_array( $value, $allowed, true ) ? $value : $default;
+}
+
+function simple_theme_sanitize_bool( $value ) {
+	return ! empty( $value );
+}
+
+/**
+ * Return the direct, valid client address. Proxy forwarding headers are not
+ * trusted here because their trust boundary is deployment-specific.
+ */
+function simple_theme_get_request_ip() {
+	if ( empty( $_SERVER['REMOTE_ADDR'] ) ) {
+		return '';
+	}
+
+	// phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized
+	$ip = wp_unslash( $_SERVER['REMOTE_ADDR'] );
+	return filter_var( $ip, FILTER_VALIDATE_IP ) ? $ip : '';
+}
+
+/**
+ * Create a non-reversible, site-specific identifier for an IP address.
+ */
+function simple_theme_hash_ip( $ip ) {
+	if ( ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+		return '';
+	}
+
+	return hash_hmac( 'sha256', $ip, wp_salt( 'auth' ) );
+}
+
+function simple_theme_get_option_number( $key, $default, $min, $max ) {
+	$options = get_option( 'simple_theme_options', array() );
+	$value   = isset( $options[ $key ] ) && is_numeric( $options[ $key ] ) ? (int) $options[ $key ] : null;
+	if ( null === $value ) {
+		$value = $default;
+	}
+	return max( $min, min( $max, $value ) );
+}
+
+// ========== Post Utilities ==========
+
+function simple_theme_get_post_term_names( $post_id, $taxonomy ) {
+	$terms = get_the_terms( $post_id, $taxonomy );
+	if ( ! $terms || is_wp_error( $terms ) ) {
+		return array();
+	}
+	return array_map( function ( $term ) {
+		return $term->name;
+	}, $terms );
+}
+
+function simple_theme_calculate_post_stats( $post ) {
+	$content = $post->post_content;
+	$content = strip_shortcodes( $content );
+	$content = wp_strip_all_tags( $content );
+	$cjk_count = 0;
+	if ( preg_match_all( '/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}]/u', $content, $matches ) ) {
+		$cjk_count = count( $matches[0] );
+	}
+	$content_without_cjk = preg_replace( '/[\x{4e00}-\x{9fff}\x{3400}-\x{4dbf}]/u', '', $content );
+	$english_words = str_word_count( $content_without_cjk, 0, '0123456789' );
+	$word_count = $cjk_count + $english_words;
+	$reading_speed = simple_theme_get_option_number( 'reading_speed', 300, 100, 600 );
+	$reading_time  = max( 1, ceil( $word_count / $reading_speed ) );
+
+	return array(
+		'wordCount'   => $word_count,
+		'readingTime' => $reading_time,
+	);
+}
+
+function simple_theme_get_current_commenter() {
+	$user = wp_get_current_user();
+	if ( $user->ID === 0 ) {
+		return null;
+	}
+	return array(
+		'displayName' => $user->display_name,
+		'email'       => $user->user_email,
+		'url'         => $user->user_url,
+	);
+}
+
+// ========== IP Location (归属地) ==========
+
+/**
+ * Resolve an IP to a human-readable location, transparently cached.
+ *
+ * Resolution happens lazily at display time (not at comment-insert time) so
+ * that comments created before this feature existed still get a location.
+ * Results — including negatives — are cached by a hashed, site-specific key so
+ * the upstream API is never hit twice for the same address. Negative results
+ * use a shorter TTL to allow a later retry without hammering the API.
+ *
+ * @return string Location on success, or '' when it cannot be resolved.
+ */
+function simple_theme_get_ip_location( $ip ) {
+	if ( ! filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+		return '';
+	}
+
+	$options = get_option( 'simple_theme_options', array() );
+	$api     = isset( $options['ip_location_api'] ) ? $options['ip_location_api'] : 'xinyew';
+	$cache   = ! isset( $options['ip_location_cache'] ) || (bool) $options['ip_location_cache'];
+
+	if ( ! $cache ) {
+		return (string) simple_theme_query_ip_location( $ip, $api );
+	}
+
+	$cache_key = 'st_ip_' . simple_theme_hash_ip( $ip );
+	$cached    = get_transient( $cache_key );
+	if ( is_string( $cached ) ) {
+		return $cached;
+	}
+
+	$location = (string) simple_theme_query_ip_location( $ip, $api );
+
+	// Cache the negative result too: for addresses the API cannot resolve
+	// (private/loopback/IPv6 gaps), this prevents a lookup on every page view.
+	$ttl = $location ? DAY_IN_SECONDS : HOUR_IN_SECONDS;
+	set_transient( $cache_key, $location, $ttl );
+
+	return $location;
+}
+
+/**
+ * Return the location for a comment, using the IP WordPress stored on insert
+ * (wp_comments.comment_author_IP). Resolved lazily and cached; the resolved
+ * value is persisted once to post meta to skip future transient lookups.
+ */
+function simple_theme_get_comment_location( WP_Comment $comment ) {
+	$stored = get_comment_meta( $comment->comment_ID, 'st_location', true );
+	if ( is_string( $stored ) && '' !== $stored ) {
+		return $stored;
+	}
+
+	$ip = isset( $comment->comment_author_IP ) ? (string) $comment->comment_author_IP : '';
+	if ( '' === $ip ) {
+		return '';
+	}
+
+	$location = simple_theme_get_ip_location( $ip );
+	if ( '' !== $location ) {
+		update_comment_meta( $comment->comment_ID, 'st_location', $location );
+	}
+
+	return $location;
+}
+
+function simple_theme_query_ip_location( $ip, $api = 'xinyew' ) {
+	switch ( $api ) {
+		case 'ip.sb':
+			return simple_theme_try_api_upk( $ip );
+		case 'ip-api.com':
+			return simple_theme_try_api_ipapi( $ip );
+		case 'xinyew':
+		default:
+			return simple_theme_try_api_xinyew( $ip );
+	}
+}
+
+function simple_theme_try_api_xinyew( $ip ) {
+	if ( ! function_exists( 'wp_remote_get' ) ) {
+		return null;
+	}
+	$response = wp_remote_get( 'https://api.xinyew.cn/api/baiduchaip?ip=' . rawurlencode( $ip ), array(
+		'timeout' => 5,
+	) );
+	if ( is_wp_error( $response ) ) {
+		return null;
+	}
+	$body = wp_remote_retrieve_body( $response );
+	$data = json_decode( $body, true );
+	if ( isset( $data['status'] ) && '0' === $data['status'] && ! empty( $data['data'][0]['location'] ) ) {
+		return $data['data'][0]['location'];
+	}
+	return null;
+}
+
+function simple_theme_try_api_upk( $ip ) {
+	if ( ! function_exists( 'wp_remote_get' ) ) {
+		return null;
+	}
+	$response = wp_remote_get( 'https://api.ip.sb/geoip/' . rawurlencode( $ip ), array(
+		'timeout' => 5,
+		'headers' => array( 'Accept' => 'application/json' ),
+	) );
+	if ( is_wp_error( $response ) ) {
+		return null;
+	}
+	$body = wp_remote_retrieve_body( $response );
+	$data = json_decode( $body, true );
+	if ( ! empty( $data['country'] ) && ! empty( $data['city'] ) ) {
+		return $data['country'] . ' - ' . $data['city'];
+	}
+	return null;
+}
+
+/**
+ * 静态直出 HTML 的图片降级：统一补 loading="lazy" 并去掉 fetchpriority="high"。
+ *
+ * 隐藏的 #st-static 只是给爬虫/无 JS 访客看的，不应因为它提前下载整篇文章的图片。
+ * 前端 Vue 渲染的正文由 useContentEnhancer 的 IntersectionObserver 接管。
+ *
+ * @param string $html 已渲染的正文 HTML。
+ * @return string
+ */
+function simple_theme_static_lazy_images( $html ) {
+	if ( ! is_string( $html ) || false === stripos( $html, '<img' ) ) {
+		return $html;
+	}
+
+	return preg_replace_callback(
+		'/<img\b[^>]*>/i',
+		function ( $matches ) {
+			$tag = $matches[0];
+			// 首图常被 WP 标记为高优先级，静态副本里没必要
+			$tag = preg_replace( '/\\s+fetchpriority=(["\'])[^"\']*\\1/i', '', $tag );
+			if ( ! preg_match( '/\sloading=/i', $tag ) ) {
+				$tag = preg_replace( '/^<img\b/i', '<img loading="lazy"', $tag );
+			}
+			return $tag;
+		},
+		$html
+	);
+}
+
+/**
+ * 文章许可协议映射（后台「页脚与备案 → 文章许可」）。
+ *
+ * 与 src/lib/license.ts 保持一致：用于静态直出 HTML，保证无 JS 访客同样
+ * 看到许可声明。'none' / 未知取值返回 null。
+ *
+ * @return array{key:string,label:string,url:string,statement:string}|null
+ */
+function simple_theme_get_article_license() {
+	$options = get_option( 'simple_theme_options', array() );
+	$key     = is_array( $options ) ? (string) ( $options['article_license'] ?? '' ) : '';
+	if ( '' === $key || 'none' === $key ) {
+		return null;
+	}
+
+	$licenses = array(
+		'cc-by-40'       => array( 'CC BY 4.0', 'https://creativecommons.org/licenses/by/4.0/', '署名 4.0 国际' ),
+		'cc-by-sa-40'    => array( 'CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/', '署名-相同方式共享 4.0 国际' ),
+		'cc-by-nc-40'    => array( 'CC BY-NC 4.0', 'https://creativecommons.org/licenses/by-nc/4.0/', '署名-非商业性使用 4.0 国际' ),
+		'cc-by-nc-sa-40' => array( 'CC BY-NC-SA 4.0', 'https://creativecommons.org/licenses/by-nc-sa/4.0/', '署名-非商业性使用-相同方式共享 4.0 国际' ),
+		'cc-by-nd-40'    => array( 'CC BY-ND 4.0', 'https://creativecommons.org/licenses/by-nd/4.0/', '署名-禁止演绎 4.0 国际' ),
+		'cc-by-nc-nd-40' => array( 'CC BY-NC-ND 4.0', 'https://creativecommons.org/licenses/by-nc-nd/4.0/', '署名-非商业性使用-禁止演绎 4.0 国际' ),
+		'cc0-10'         => array( 'CC0 1.0', 'https://creativecommons.org/publicdomain/zero/1.0/', 'CC0 1.0 通用（公有领域贡献）' ),
+		'mit'            => array( 'MIT', 'https://opensource.org/license/mit', 'MIT 许可证' ),
+		'arr'            => array( 'All Rights Reserved', '', '保留所有权利' ),
+	);
+
+	if ( ! isset( $licenses[ $key ] ) ) {
+		return null;
+	}
+
+	list( $label, $url, $full_name ) = $licenses[ $key ];
+
+	return array(
+		'key'       => $key,
+		'label'     => $label,
+		'url'       => $url,
+		'full_name' => $full_name,
+		'statement' => '' !== $url
+			? sprintf( '本文采用 %s 许可协议发布，转载请注明出处。', $label )
+			: '本文版权归作者所有，未经许可请勿转载。',
+	);
+}
+
+function simple_theme_try_api_ipapi( $ip ) {
+	if ( ! function_exists( 'wp_remote_get' ) ) {
+		return null;
+	}
+	$response = wp_remote_get( 'http://ip-api.com/json/' . rawurlencode( $ip ) . '?lang=zh-CN', array(
+		'timeout' => 5,
+	) );
+	if ( is_wp_error( $response ) ) {
+		return null;
+	}
+	$body = wp_remote_retrieve_body( $response );
+	$data = json_decode( $body, true );
+	if ( ! empty( $data['country'] ) && ! empty( $data['city'] ) && 'success' === ( $data['status'] ?? '' ) ) {
+		return $data['country'] . ' - ' . $data['city'];
+	}
+	return null;
+}

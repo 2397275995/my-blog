@@ -1,0 +1,52 @@
+name: 构建并发布
+
+# 在线写作后台提交 content.json 后，自动重建并发布到 EdgeOne。
+# 需要先在仓库设置里配好：
+#   Secret   EDGEONE_TOKEN    EdgeOne API Token（控制台 → 项目设置 → API Token）
+#   Variable EDGEONE_PROJECT  EdgeOne 项目名称（英文/数字那个）
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'admin/content.json'
+      - 'simpletheme-build/src/**'
+      - 'simpletheme-build/public/**'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: 安装前端依赖
+        working-directory: simpletheme-build
+        run: npm ci
+
+      - name: 生成内容并构建
+        run: python admin/build.py --rebuild
+
+      - name: 发布到 EdgeOne
+        env:
+          EDGEONE_TOKEN: ${{ secrets.EDGEONE_TOKEN }}
+          EDGEONE_PROJECT: ${{ vars.EDGEONE_PROJECT }}
+        run: |
+          if [ -z "$EDGEONE_TOKEN" ] || [ -z "$EDGEONE_PROJECT" ]; then
+            echo "缺少 EDGEONE_TOKEN 或 EDGEONE_PROJECT，跳过发布"
+            exit 0
+          fi
+          npx -y edgeone pages deploy simpletheme-static -n "$EDGEONE_PROJECT" -t "$EDGEONE_TOKEN" -e production

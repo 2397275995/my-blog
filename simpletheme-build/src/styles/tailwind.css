@@ -1,0 +1,68 @@
+/* ==================== Tailwind CSS v4 Entry (前台) ====================
+ * 包含 Preflight —— 只允许前台入口使用。
+ * wp-admin 内的入口请用 src/admin/styles/admin-tailwind.css。
+ *
+ * 设计令牌全部来自 ./tokens.css（唯一事实来源），本文件不定义任何取值。
+ * ==================================================================== */
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* ==================== Base overrides ==================== */
+@layer base {
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html {
+    background-color: var(--background);
+    /* Always reserve scrollbar gutter to avoid layout shift between routes */
+    overflow-y: scroll;
+  }
+
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    /* Hide the window scrollbar (theme design choice) */
+    scrollbar-width: none;
+  }
+
+  body::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  :disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  ::selection {
+    background-color: var(--primary);
+    color: #fff;
+  }
+
+  kbd {
+    display: inline-block;
+    font-family: inherit;
+    font-size: 0.8em;
+    line-height: 1.4;
+    padding: 0.15em 0.4em 0.1em;
+    margin: 0.1em;
+    background-color: var(--muted, rgba(128, 128, 128, 0.1));
+    color: var(--secondary);
+    border-radius: 0.2em;
+    box-shadow: inset 0 -0.15em 0 var(--muted, rgba(128, 128, 128, 0.1));
+    border: none;
+    vertical-align: middle;
+  }
+}

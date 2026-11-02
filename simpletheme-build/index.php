@@ -1,0 +1,76 @@
+<?php
+/**
+ * WordPress 主题入口模板，交由 Vue 应用接管前台渲染。
+ *
+ * @package SimpleTheme
+ *
+ * @license MIT
+ */
+
+?><!doctype html>
+<html <?php language_attributes(); ?>>
+	<head>
+		<meta charset="<?php bloginfo( 'charset' ); ?>">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script>
+			(function() {
+				// 顶栏站点名：接口拿不到时（离线/验证拦截）也有名字可显示
+				window.__ST_SITE_NAME__ = <?php echo wp_json_encode( get_bloginfo( 'name' ) ); ?>;
+				var theme = localStorage.getItem('theme');
+				if (theme !== 'light' && theme !== 'dark') {
+					theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+				}
+				document.documentElement.setAttribute('data-theme', theme);
+				document.documentElement.style.colorScheme = theme;
+			})();
+		</script>
+		<?php wp_head(); ?>
+	</head>
+	<body <?php body_class( 'simple-theme-shell' ); ?>>
+		<?php wp_body_open(); ?>
+		<style>#st-static{display:none}</style>
+		<div id="st-static">
+			<?php get_template_part( 'templates/parts/static-content' ); ?>
+		</div>
+		<div id="app"></div>
+		<noscript>
+			<style>
+			#st-static{display:block}
+			#st-static{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans SC",sans-serif;color:#333;background:#fff;line-height:1.7;padding:0 20px}
+			#st-static .cf-container{max-width:780px;margin:0 auto;padding:20px 0}
+			#st-static .cf-header{padding:20px 0;border-bottom:1px solid #eee;margin-bottom:30px}
+			#st-static .cf-header__logo{font-size:1.5rem;font-weight:700;color:#000;text-decoration:none}
+			#st-static .cf-header__desc{color:#666;font-size:.875rem;margin-top:4px}
+			#st-static .cf-page-title{font-size:1.75rem;font-weight:700;margin-bottom:24px}
+			#st-static .cf-posts{display:flex;flex-direction:column;gap:24px}
+			#st-static .cf-post{padding-bottom:24px;border-bottom:1px solid #f0f0f0}
+			#st-static .cf-post__title{font-size:1.25rem;font-weight:600;margin-bottom:6px}
+			#st-static .cf-post__title a,#st-static .cf-single__body a{color:#1a0dab;text-decoration:none}
+			#st-static .cf-post__meta,#st-static .cf-single__meta{font-size:.8125rem;color:#888;margin-bottom:8px}
+			#st-static .cf-post__excerpt{font-size:.9375rem;color:#444}
+			#st-static .cf-single__title{font-size:2rem;font-weight:700;margin-bottom:12px;line-height:1.3}
+			#st-static .cf-single__body{font-size:1rem;line-height:1.8}
+		#st-static .cf-single__license{position:relative;margin-top:22px;padding-top:18px;border-top:1px solid #e2e2e2;overflow:hidden;font-size:.8125rem;line-height:1.7;color:#888}
+		#st-static .cf-single__license-head{display:flex;flex-direction:column;gap:2px}
+		#st-static .cf-single__license-title{color:#333;font-size:.9375rem;font-weight:600;text-decoration:none}
+		#st-static .cf-single__license-url{color:#888;font-size:.75rem;text-decoration:none;word-break:break-all}
+		#st-static .cf-single__license-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px 24px;margin:16px 0 0}
+		#st-static .cf-single__license-meta dd{margin:2px 0 0;color:#333}
+		#st-static .cf-single__license-meta dt{color:#888;font-size:.75rem}
+		#st-static .cf-single__license-meta a{color:#333;text-decoration:none}
+		#st-static .cf-single__license-name{margin:14px 0 0;color:#888;font-size:.75rem}
+		#st-static .cf-single__tags{display:block;margin-top:16px;font-size:.8125rem;color:#888}
+		#st-static .cf-single__license::after{content:'\00a9';position:absolute;top:16px;right:8px;font-size:96px;font-weight:700;line-height:1;color:#333;opacity:.05;pointer-events:none}
+			#st-static .cf-single__body img{max-width:100%;height:auto}
+			#st-static .cf-single__body pre{background:#f5f5f5;padding:1em;overflow-x:auto;border-radius:4px;font-size:.875em}
+			#st-static .cf-pagination{margin-top:24px;display:flex;gap:16px}
+			#st-static .cf-footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:.8125rem;color:#999;text-align:center}
+		#st-static .cf-footer__icp{margin-top:6px;font-size:.75rem}
+		#st-static .cf-footer__icp a{color:#999;text-decoration:none;margin:0 5px}
+		#st-static .cf-footer__icp a:hover{text-decoration:underline}
+			#st-static .cf-empty{color:#999;font-style:italic}
+			</style>
+		</noscript>
+		<?php wp_footer(); ?>
+	</body>
+</html>

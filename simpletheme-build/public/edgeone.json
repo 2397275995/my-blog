@@ -1,0 +1,29 @@
+{
+  "$comment": "EdgeOne Pages 部署配置。SPA 回退：未命中静态资源时回 index.html 交给前端路由。Cloudflare Pages 用的是同目录下的 _redirects，两者互不影响。",
+  "rewrites": [
+    {
+      "source": "/*",
+      "destination": "/index.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/assets/*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/*",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        }
+      ]
+    }
+  ]
+}

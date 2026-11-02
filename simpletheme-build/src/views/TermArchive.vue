@@ -1,0 +1,133 @@
+<script setup lang="ts">
+import { computed, watch } from 'vue'
+import { RouterLink } from 'vue-router'
+import { toInternalPath, getThemeConfig } from '@/lib/theme-config'
+import type { WordPressPost } from '@/types/wordpress'
+import ErrorView from '@/components/ErrorView.vue'
+import StaticFallback from '@/components/StaticFallback.vue'
+import PostListSkeleton from '@/components/PostListSkeleton.vue'
+import { useStaticFallback } from '@/composables/useStaticFallback'
+import { useSkeletonSize } from '@/composables/useSkeletonSize'
+
+const props = defineProps<{
+  termName: string
+  termTaxonomy: string
+  termPostsLoading: boolean
+  errorMessage: string
+  termPosts: WordPressPost[]
+}>()
+
+const { staticFallbackHtml } = useStaticFallback()
+
+// 骨架尺寸记忆：与首页共用同一 key，保证骨架和真实卡片同高、同封面形态
+const { size: cardSize, measure: measureCard } = useSkeletonSize('st_sk_post_card')
+
+watch(
+  () => props.termPosts,
+  (posts) => {
+    if (posts.length > 0) void measureCard('.term-archive .post-card', '.post-card__cover')
+  },
+)
+
+const metaConfig = computed(() => getThemeConfig().features?.meta)
+
+const subtitleMap: Record<string, string> = {
+  post_tag: 'Tag.',
+  category: 'Category.',
+  date: 'Date.',
+}
+
+const formatDate = (dateString: string) =>
+  new Intl.DateTimeFormat('zh-CN', {
+    year: 'numeric', month: 'long', day: 'numeric',
+  }).format(new Date(dateString))
+
+const formatModifiedDate = (dateString?: string) => {
+  if (!dateString) return ''
+  return '更新: ' + formatDate(dateString)
+}
+
+const formatWordCount = (count?: number) => {
+  if (!count) return ''
+  return count >= 1000 ? `${(count / 1000).toFixed(1)}k 字` : `${count} 字`
+}
+</script>
+
+<template>
+  <section class="term-archive">
+    <header class="section-header">
+      <h1>
+        <span class="section-header__title">{{ termTaxonomy === 'post_tag' ? '#' + termName : termName }}</span>
+        <span class="section-header__subtitle">&nbsp;{{ subtitleMap[termTaxonomy] || '归档' }}</span>
+      </h1>
+    </header>
+
+    <!-- Term loading -->
+    <PostListSkeleton
+      v-if="termPostsLoading"
+      :count="3"
+      :card-height="cardSize?.h"
+      :show-cover="cardSize?.cover !== false"
+    />
+
+    <!-- Term error -->
+    <StaticFallback
+      v-else-if="errorMessage && staticFallbackHtml"
+      :html="staticFallbackHtml"
+    />
+    <ErrorView
+      v-else-if="errorMessage"
+      illustration="empty"
+      title="归档内容加载失败"
+      description="无法获取该归档下的内容，请稍后重试。"
+    />
+
+    <!-- Term empty -->
+    <ErrorView
+      v-else-if="termPosts.length === 0"
+      illustration="searching"
+      title="这里还没有内容"
+      description="这个归档下还没有可展示的文章。"
+    />
+
+    <!-- Term posts -->
+    <div v-else class="post-list">
+      <article v-for="post in termPosts" :key="post.id" class="post-card">
+        <!-- Cover image — absolute positioned right overlay -->
+        <router-link
+          v-if="post.featuredImage"
+          :to="toInternalPath(post.link)"
+          class="post-card__cover-link"
+          tabindex="-1"
+          aria-hidden="true"
+        >
+          <img
+            :src="post.featuredImage"
+            alt=""
+            loading="lazy"
+            class="post-card__cover"
+          />
+        </router-link>
+        <!-- Meta badge — top-right overlay -->
+        <div class="post-card__meta">
+          <span v-if="metaConfig?.showCategory && post.categories?.[0]" class="post-card__meta-item">{{ post.categories[0] }}</span>
+          <time v-if="metaConfig?.showPublishDate" :datetime="post.date" class="post-card__meta-item">{{ formatDate(post.date) }}</time>
+          <time v-if="metaConfig?.showModifiedDate && post.modified" :datetime="post.modified" class="post-card__meta-item">{{ formatModifiedDate(post.modified) }}</time>
+          <span v-if="metaConfig?.showCommentCount && post.commentCount !== undefined" class="post-card__meta-item">{{ post.commentCount }} 评论</span>
+          <span v-if="metaConfig?.showViewCount && post.viewCount !== undefined" class="post-card__meta-item">{{ post.viewCount }} 热度</span>
+          <span v-if="metaConfig?.showReadingTime && post.readingTime" class="post-card__meta-item">{{ post.readingTime }} 分钟</span>
+          <span v-if="metaConfig?.showWordCount && post.wordCount" class="post-card__meta-item">{{ formatWordCount(post.wordCount) }}</span>
+        </div>
+        <!-- Body: title, excerpt -->
+        <div class="post-card__body">
+          <h2 class="post-card__title">
+            <router-link :to="toInternalPath(post.link)">
+              <span v-html="post.title.rendered"></span>
+            </router-link>
+          </h2>
+          <p v-if="post.excerpt?.rendered" class="post-card__excerpt" v-html="post.excerpt.rendered"></p>
+        </div>
+      </article>
+    </div>
+  </section>
+</template>

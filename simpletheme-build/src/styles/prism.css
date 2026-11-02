@@ -1,0 +1,134 @@
+/* ---------- 1. Prism syntax highlighting CSS variables ---------- */
+/* --font-code is defined in tailwind.css (@theme) */
+:root,
+[data-theme='light'] {
+  --prism-text: #24292f;
+  --prism-comment: #6e7781;
+  --prism-punctuation: #24292f;
+  --prism-property: #0550ae;
+  --prism-selector: #8250df;
+  --prism-operator: #0550ae;
+  --prism-keyword: #cf222e;
+  --prism-function: #8250df;
+  --prism-variable: #953800;
+  --prism-string: #0a3069;
+  --prism-number: #0550ae;
+  --prism-boolean: #0550ae;
+  --prism-constant: #0550ae;
+  --prism-tag: #116329;
+  --prism-attr: #0550ae;
+  --prism-attr-value: #0a3069;
+  --prism-regex: #0a3069;
+  --prism-builtin: #8250df;
+  --prism-class: #8250df;
+  --prism-inserted: #116329;
+  --prism-deleted: #cf222e;
+}
+
+[data-theme='dark'] {
+  --prism-text: #e1e4e8;
+  --prism-comment: #8b949e;
+  --prism-punctuation: #e1e4e8;
+  --prism-property: #79c0ff;
+  --prism-selector: #d2a8ff;
+  --prism-operator: #79c0ff;
+  --prism-keyword: #ff7b72;
+  --prism-function: #d2a8ff;
+  --prism-variable: #ffa657;
+  --prism-string: #a5d6ff;
+  --prism-number: #79c0ff;
+  --prism-boolean: #79c0ff;
+  --prism-constant: #79c0ff;
+  --prism-tag: #7ee787;
+  --prism-attr: #79c0ff;
+  --prism-attr-value: #a5d6ff;
+  --prism-regex: #a5d6ff;
+  --prism-builtin: #d2a8ff;
+  --prism-class: #d2a8ff;
+  --prism-inserted: #7ee787;
+  --prism-deleted: #ff7b72;
+}
+
+/* ---------- 2. Prism token color mapping ---------- */
+.prose-content pre code .token.comment,
+.prose-content pre code .token.prolog,
+.prose-content pre code .token.doctype,
+.prose-content pre code .token.cdata {
+  color: var(--prism-comment);
+  font-style: italic;
+}
+
+.prose-content pre code .token.keyword,
+.prose-content pre code .token.selector,
+.prose-content pre code .token.tag {
+  color: var(--prism-keyword);
+}
+
+.prose-content pre code .token.string,
+.prose-content pre code .token.attr-value,
+.prose-content pre code .token.regex,
+.prose-content pre code .token.char {
+  color: var(--prism-string);
+}
+
+.prose-content pre code .token.function,
+.prose-content pre code .token.class-name {
+  color: var(--prism-function);
+}
+
+.prose-content pre code .token.number,
+.prose-content pre code .token.boolean {
+  color: var(--prism-number);
+}
+
+.prose-content pre code .token.constant,
+.prose-content pre code .token.symbol {
+  color: var(--prism-constant);
+}
+
+.prose-content pre code .token.operator,
+.prose-content pre code .token.entity {
+  color: var(--prism-operator);
+}
+
+.prose-content pre code .token.punctuation {
+  color: var(--prism-punctuation);
+}
+
+.prose-content pre code .token.property,
+.prose-content pre code .token.variable {
+  color: var(--prism-property);
+}
+
+.prose-content pre code .token.builtin {
+  color: var(--prism-builtin);
+}
+
+.prose-content pre code .token.attr-name {
+  color: var(--prism-attr);
+}
+
+.prose-content pre code .token.atrule {
+  color: var(--prism-function);
+}
+
+.prose-content pre code .token.inserted {
+  color: var(--prism-inserted);
+}
+
+.prose-content pre code .token.deleted {
+  color: var(--prism-deleted);
+}
+
+.prose-content pre code .token.important {
+  color: var(--prism-keyword);
+  font-weight: inherit;
+}
+
+.prose-content pre code .token.bold {
+  font-weight: 700;
+}
+
+.prose-content pre code .token.italic {
+  font-style: italic;
+}

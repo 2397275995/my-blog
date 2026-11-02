@@ -1,0 +1,308 @@
+/* ===================================================================
+   Sakurairo 区块样式 — 统一到 Simple Theme 设计语言
+   ===================================================================
+   许可：移植/改自 Sakurairo（https://github.com/mirai-mamori/Sakurairo，
+   Copyright (c) mirai-mamori 及贡献者），沿用 GPL-2.0 授权。
+   GPL-2.0: https://www.gnu.org/licenses/old-licenses/gpl-2.0.html
+   -------------------------------------------------------------------
+   本文件是这些区块的唯一样式来源：前台（SPA / 静态 HTML）与区块编辑器
+   共用。样式全部消费主题令牌，不再出现硬编码颜色。
+   设计语言对齐 src/ui 的 StAlert / StCard / StAvatar：
+   - 卡片：`var(--card)` + `1px var(--border)` + `var(--radius-*)`
+   - 暗色顶光：`var(--card-highlight)`
+   - 状态色：`var(--danger)` / `var(--warning)` / `var(--success)`
+   - 动效曲线：`var(--transition)` / `var(--ease-out)`
+   =================================================================== */
+
+/* ==================== 1. 通知块（Notice / Callout） ====================
+   结构：<div class="wp-block-sakurairo-notice-block shortcodestyle task">
+           <span class="sc-title">TASK</span><span class="sc-content">…</span>
+         </div>
+   类型通过同名类切换强调色，视觉对齐 StAlert（浅色底 + 同色标题，无描边）。 */
+
+.shortcodestyle,
+.prose-content .shortcodestyle {
+  --sk-accent: var(--muted-foreground);
+
+  display: block;
+  margin: 24px 0;
+  padding: 11px 14px;
+  background: color-mix(in srgb, var(--sk-accent) 8%, var(--card));
+  border: 0;
+  border-radius: var(--radius-medium, 6px);
+  box-shadow: var(--card-highlight);
+  font-size: var(--st-font-medium, 14px);
+  line-height: 1.65;
+  color: var(--foreground);
+}
+
+.shortcodestyle .sc-title,
+.prose-content .shortcodestyle .sc-title {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--sk-accent);
+  font-size: var(--st-font-small, 13px);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.shortcodestyle .sc-content,
+.prose-content .shortcodestyle .sc-content {
+  display: block;
+}
+
+.shortcodestyle p,
+.prose-content .shortcodestyle p {
+  margin: 0.4em 0;
+}
+
+.shortcodestyle p:first-of-type,
+.prose-content .shortcodestyle p:first-of-type {
+  margin-top: 0;
+}
+
+.shortcodestyle p:last-of-type,
+.prose-content .shortcodestyle p:last-of-type {
+  margin-bottom: 0;
+}
+
+/* 类型强调色 */
+.shortcodestyle.task,
+.prose-content .shortcodestyle.task {
+  --sk-accent: var(--muted-foreground);
+}
+.shortcodestyle.warning,
+.prose-content .shortcodestyle.warning {
+  --sk-accent: var(--warning);
+}
+.shortcodestyle.noway,
+.prose-content .shortcodestyle.noway {
+  --sk-accent: var(--danger);
+}
+.shortcodestyle.buy,
+.prose-content .shortcodestyle.buy {
+  --sk-accent: var(--success);
+}
+
+/* ==================== 2. 展示卡片（Showcard） ====================
+   结构：<div class="wp-block-sakurairo-showcard-block showcard">
+           <div class="img" style="background:url(…)">
+             <a href="…"><button class="showcard-button"><i class="ti ti-play-circle"></i></button></a>
+           </div>
+           <div class="icon-title"><i class="ti ti-bookmark"></i><span class="title">…</span></div>
+         </div> */
+
+.showcard,
+.prose-content .showcard {
+  display: inline-flex;
+  flex-direction: column;
+  width: 220px;
+  max-width: 100%;
+  margin: 24px 0;
+  padding: 10px;
+  vertical-align: top;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large, 8px);
+  box-shadow: var(--shadow-small), var(--card-highlight);
+  transition:
+    box-shadow var(--transition),
+    border-color var(--transition),
+    transform var(--transition);
+}
+
+.showcard:hover,
+.prose-content .showcard:hover {
+  border-color: color-mix(in srgb, var(--border) 40%, var(--foreground));
+  box-shadow: var(--shadow-medium);
+  transform: translateY(-2px);
+}
+
+.showcard .img,
+.prose-content .showcard .img {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--radius-medium, 6px);
+  background: var(--muted);
+}
+
+.showcard .img > a,
+.prose-content .showcard .img > a {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.showcard-button,
+.prose-content .showcard-button {
+  /* 媒体浮层惯例：固定深色半透明底 + 白图标，保证盖在任何封面图上都清晰；
+     覆盖编辑器里保存的 color（默认 #fff），否则浅色主题下会不可见。 */
+  color: #fff !important;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 1px solid rgb(255 255 255 / 0.22);
+  border-radius: var(--radius-full, 9999px);
+  background: rgb(0 0 0 / 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  transition:
+    transform var(--transition),
+    background-color var(--transition);
+}
+
+.showcard-button svg,
+.showcard-button i,
+.prose-content .showcard-button svg,
+.prose-content .showcard-button i {
+  width: 20px;
+  height: 20px;
+  color: inherit !important;
+  font-size: 20px !important;
+}
+
+.showcard .img:hover .showcard-button,
+.prose-content .showcard .img:hover .showcard-button {
+  background: rgb(0 0 0 / 0.65);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.showcard .icon-title,
+.prose-content .showcard .icon-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 0 2px;
+  font-size: var(--st-font-small, 13px);
+  line-height: 1.4;
+  color: var(--muted-foreground);
+}
+
+.showcard .icon-title svg,
+.showcard .icon-title i,
+.prose-content .showcard .icon-title svg,
+.prose-content .showcard .icon-title i {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--muted-foreground) !important;
+  font-size: 15px !important;
+}
+
+.showcard .icon-title .title,
+.prose-content .showcard .icon-title .title {
+  color: var(--foreground);
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==================== 3. 对话块（Conversations） ====================
+   结构：<div class="wp-block-sakurairo-conversations-block conversations-code" style="display:flex;flex-direction:row">
+           <img src="…" alt="">
+           <div class="conversations-code-text">…</div>
+         </div>
+   row-reverse 由内联样式控制，无需额外规则。 */
+
+.conversations-code,
+.prose-content .conversations-code {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin: 24px 0;
+}
+
+.conversations-code > img,
+.prose-content .conversations-code > img {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  object-fit: cover;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-full, 9999px);
+  background: var(--muted);
+}
+
+.conversations-code-text,
+.prose-content .conversations-code-text {
+  width: fit-content;
+  max-width: 75%;
+  margin: 0;
+  padding: 10px 14px;
+  font-size: var(--st-font-medium, 14px);
+  line-height: 1.7;
+  color: var(--foreground);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large, 8px);
+  box-shadow: var(--shadow-small), var(--card-highlight);
+}
+
+.conversations-code-text p,
+.prose-content .conversations-code-text p {
+  margin: 0.5em 0;
+}
+
+.conversations-code-text p:first-child,
+.prose-content .conversations-code-text p:first-child {
+  margin-top: 0;
+}
+
+.conversations-code-text p:last-child,
+.prose-content .conversations-code-text p:last-child {
+  margin-bottom: 0;
+}
+
+/* ==================== 4. Bilibili 视频（vbilibili） ====================
+   结构：<div class="wp-block-sakurairo-vbilibili vbilibili" style="position:relative;padding:56.25% 0 0 0">
+           <iframe …></iframe>
+         </div> */
+
+.vbilibili,
+.prose-content .vbilibili {
+  position: relative;
+  width: 100%;
+  margin: 24px 0;
+  overflow: hidden;
+  background: #000;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-large, 8px);
+  box-shadow: var(--shadow-small), var(--card-highlight);
+}
+
+.vbilibili iframe,
+.prose-content .vbilibili iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: none;
+  border-radius: inherit;
+  /* 裁掉右下角，遮住 B 站播放器的广告按钮 */
+  clip-path: polygon(
+    0 0,
+    100% 0,
+    100% calc(100% - 40px),
+    calc(100% - 40px) calc(100% - 40px),
+    calc(100% - 40px) 100%,
+    0 100%
+  );
+}

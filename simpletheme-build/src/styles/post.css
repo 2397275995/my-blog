@@ -1,0 +1,262 @@
+/* Single post page */
+@layer components {
+/* ==================== Single Post Page ==================== */
+.single-post {
+  width: 100%;
+}
+
+.single-post__cover {
+  width: 100%;
+  height: 350px;
+  position: relative;
+  overflow: hidden;
+}
+
+.single-post__cover-img {
+  width: 100%;
+  height: 100%;
+}
+
+.single-post__cover-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.single-post__cover-img::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 50%;
+  background: linear-gradient(transparent, rgba(0 0 0 / 0.55));
+  pointer-events: none;
+}
+
+.single-post__cover-info {
+  position: absolute;
+  bottom: 25px;
+  left: 25px;
+  right: 25px;
+  color: #fff;
+  z-index: 1;
+  text-align: center;
+}
+
+.single-post__cover-title h1 {
+  margin: 0 0 10px;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+}
+
+.single-post__cover-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.single-post__cover-category {
+  display: inline-block;
+  font-size: 12px;
+  background: rgba(255 255 255 / 0.2);
+  padding: 2px 10px;
+  border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+
+/* No featured image header */
+.single-post__header {
+  padding: 30px 25px 0;
+}
+
+.single-post__header-title {
+  margin: 0 0 12px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--foreground);
+  text-align: center;
+}
+
+.single-post__header-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 14px;
+  color: var(--secondary);
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.single-post__header-category {
+  display: inline-block;
+  font-size: 12px;
+  background: var(--muted);
+  color: var(--secondary);
+  padding: 2px 10px;
+  border-radius: 4px;
+  text-decoration: none;
+}
+
+.single-post__body {
+  padding: 30px 25px;
+}
+
+.single-post__footer {
+  border-top: 1px solid var(--border);
+  margin-top: 30px;
+  padding-top: 20px;
+}
+
+/* 标签放在版权信息之后收尾 */
+.single-post__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 16px 0 0;
+}
+
+/* 文章版权信息：引用本文版式，无卡片边框/底色，只用一条分隔线收尾 */
+/* 版权信息现在排在页脚最前，分隔线由 .single-post__footer 提供，这里不再重复画 */
+.single-post__license {
+  position: relative;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--secondary);
+}
+
+.single-post__license-head {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.single-post__license-title {
+  color: var(--foreground);
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.single-post__license-title:hover,
+.single-post__license-url:hover,
+.single-post__license-item a:hover {
+  color: var(--primary);
+}
+
+.single-post__license-url {
+  color: var(--secondary);
+  font-size: 12px;
+  text-decoration: none;
+  word-break: break-all;
+}
+
+.single-post__license-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 12px 24px;
+  margin: 16px 0 0;
+}
+
+.single-post__license-item dd {
+  margin: 2px 0 0;
+  color: var(--foreground);
+}
+
+.single-post__license-item dt {
+  color: var(--secondary);
+  font-size: 12px;
+}
+
+.single-post__license-item a {
+  color: var(--foreground);
+  text-decoration: none;
+}
+
+.single-post__license-name {
+  margin: 14px 0 0;
+  color: var(--secondary);
+  font-size: 12px;
+}
+
+/* 右侧淡化 © 水印，纯装饰 */
+.single-post__license::after {
+  content: '©';
+  position: absolute;
+  top: 16px;
+  right: 8px;
+  font-size: 96px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--foreground);
+  opacity: 0.05;
+  pointer-events: none;
+}
+
+/* 标签胶囊本体由 StTag 渲染，这里只管外层链接触摸区与悬停反馈 */
+.single-post__tag-link {
+  display: inline-flex;
+  text-decoration: none;
+  color: var(--secondary);
+}
+
+.single-post__tag-link:hover .st-tag {
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 35%, var(--border));
+}
+/* End note / pagination */
+.end-note {
+  padding-top: 25px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.end-note::before {
+  content: '✦';
+  font-size: 12px;
+}
+
+@media (max-width: 800px) {
+  .single-post__cover {
+    height: 250px;
+  }
+  .single-post__header {
+    padding: 25px 20px 0;
+  }
+  .single-post__body {
+    padding: 25px 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .single-post__cover {
+    height: 200px;
+  }
+  .single-post__header {
+    padding: 20px 15px 0;
+  }
+  .single-post__header-title {
+    font-size: 22px;
+  }
+  .single-post__body {
+    padding: 20px 15px;
+    overflow-x: hidden;
+  }
+}
+}

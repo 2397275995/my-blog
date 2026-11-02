@@ -1,0 +1,94 @@
+{
+  "_ErrorView-BIVQslvu.css": {
+    "file": "assets/ErrorView-BIVQslvu.css",
+    "src": "_ErrorView-BIVQslvu.css"
+  },
+  "_ErrorView-CfpcyrKn.js": {
+    "file": "assets/ErrorView-CfpcyrKn.js",
+    "name": "ErrorView",
+    "imports": [
+      "_theme-preference-DRkN481P.js"
+    ],
+    "css": [
+      "assets/ErrorView-BIVQslvu.css"
+    ]
+  },
+  "_app-Czo97vRc.css": {
+    "file": "assets/app-Czo97vRc.css",
+    "src": "_app-Czo97vRc.css"
+  },
+  "_fancyapps-ui-B8KlBK9n.css": {
+    "file": "assets/fancyapps-ui-B8KlBK9n.css",
+    "src": "_fancyapps-ui-B8KlBK9n.css"
+  },
+  "_fancyapps-ui-CTq1rdTR.js": {
+    "file": "assets/fancyapps-ui-CTq1rdTR.js",
+    "name": "fancyapps-ui",
+    "css": [
+      "assets/fancyapps-ui-B8KlBK9n.css"
+    ]
+  },
+  "_theme-preference-Cp5IWiwz.css": {
+    "file": "assets/theme-preference-Cp5IWiwz.css",
+    "src": "_theme-preference-Cp5IWiwz.css"
+  },
+  "_theme-preference-DRkN481P.js": {
+    "file": "assets/theme-preference-DRkN481P.js",
+    "name": "theme-preference",
+    "dynamicImports": [
+      "src/lib/tabler-icons.generated.ts"
+    ],
+    "css": [
+      "assets/theme-preference-Cp5IWiwz.css"
+    ]
+  },
+  "src/admin/main.ts": {
+    "file": "assets/admin-io9e-YSd.js",
+    "name": "admin",
+    "src": "src/admin/main.ts",
+    "isEntry": true,
+    "imports": [
+      "_theme-preference-DRkN481P.js"
+    ],
+    "css": [
+      "assets/admin-DDRsCzBN.css",
+      "assets/app-Czo97vRc.css"
+    ]
+  },
+  "src/admin/shell-entry.ts": {
+    "file": "assets/admin-shell-DZvJTxJA.js",
+    "name": "admin-shell",
+    "src": "src/admin/shell-entry.ts",
+    "isEntry": true,
+    "imports": [
+      "_theme-preference-DRkN481P.js"
+    ],
+    "css": [
+      "assets/admin-shell-Uved5CyI.css"
+    ]
+  },
+  "src/lib/tabler-icons.generated.ts": {
+    "file": "assets/tabler-icons.generated-DGpE6_nX.js",
+    "name": "tabler-icons.generated",
+    "src": "src/lib/tabler-icons.generated.ts",
+    "isDynamicEntry": true
+  },
+  "src/main.ts": {
+    "file": "assets/frontend-Bb8qSqs-.js",
+    "name": "frontend",
+    "src": "src/main.ts",
+    "isEntry": true,
+    "imports": [
+      "_theme-preference-DRkN481P.js",
+      "_ErrorView-CfpcyrKn.js",
+      "_fancyapps-ui-CTq1rdTR.js"
+    ],
+    "dynamicImports": [
+      "src/main.ts"
+    ],
+    "css": [
+      "assets/frontend-DsCAMO1o.css",
+      "assets/app-Czo97vRc.css"
+    ]
+  }
+}

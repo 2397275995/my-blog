@@ -1,0 +1,39 @@
+# 依赖
+node_modules/
+
+# 构建产物（由 GitHub Actions 重新生成）
+simpletheme-static/
+simpletheme-build/dist/
+simpletheme-build/dist-*/
+simpletheme-build/_old_static_*/
+simpletheme-build/_scratch_*/
+simpletheme-build/_old_build*/
+simpletheme-build/.vite/
+simpletheme-build/stats.html
+
+# 构建脚本会往这里同步一份，仓库只需要 simpletheme-build
+simpletheme/
+
+# 早期实验目录，与本项目无关
+blog-redesign/
+blog-static/
+
+# 截图与本地状态
+预览截图/
+.workbuddy/
+edgeone-project.txt
+dist/
+
+# 杂项
+*.log
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.vscode/
+.idea/
+
+# 备份与历史构建副本
+*.bak
+simpletheme-build/_old_v1/
+simpletheme-build/_old_v2/

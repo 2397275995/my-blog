@@ -1,0 +1,241 @@
+import { computed, ref } from 'vue'
+import { fetchMenus, fetchSiteInfo, getErrorMessage } from '@/lib/wordpress'
+import { getCached, setCache, computeHash, clearAllCache } from '@/lib/persistent-cache'
+import { getThemeConfig } from '@/lib/theme-config'
+
+import type {
+  HeroSettings,
+  MenuItem,
+  SiteInfo,
+  SiteStats,
+  ThemeSettings,
+} from '@/types/wordpress'
+
+// Manual cache refresh: ?st_refresh=1 clears all caches and reloads
+const params = new URLSearchParams(window.location.search)
+if (params.has('st_refresh')) {
+  clearAllCache()
+  ;(async () => {
+    if ('caches' in window) {
+      const keys = (await caches.keys()).filter((k) => k.startsWith('st-'))
+      await Promise.all(keys.map((k) => caches.delete(k)))
+    }
+    params.delete('st_refresh')
+    const qs = params.toString()
+    window.location.replace(window.location.pathname + (qs ? '?' + qs : ''))
+  })()
+}
+
+const fallbackThemeSettings: ThemeSettings = {
+  primaryColor: '#333333',
+  bodyFont: '"MiSans VF", "OPPO Sans", "SF Pro SC", HarmonyOS_Regular, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "PingFang SC", "Segoe UI", "Noto Sans", "Microsoft Yahei", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji"',
+  codeFont: 'ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", "Fira Code", Consolas, Menlo, Monaco, "Courier New", monospace',
+  radius: 'medium',
+  shadow: 'small',
+  backgroundLight: '#f5f6f7',
+  backgroundDark: '#1a1a1a',
+  cardLight: '#ffffff',
+  cardDark: '#222222',
+  foregroundLight: '#333333',
+  foregroundDark: '#e0e0e0',
+  accentLight: '#f5f5f5',
+  accentDark: '#2a2a2a',
+  borderLight: '#e2e2e2',
+  borderDark: '#333333',
+  containerMaxWidth: getThemeConfig().layout?.containerMaxWidth ?? 1500,
+  articleMaxWidth: getThemeConfig().layout?.articleMaxWidth ?? 900,
+  cardMeta: {
+    showCategory: true,
+    showPublishDate: true,
+    showModifiedDate: false,
+    showCommentCount: false,
+    showViewCount: false,
+    showReadingTime: true,
+    showWordCount: true,
+    showAuthor: true,
+  },
+}
+
+const fallbackHeroSettings: HeroSettings = {
+  enabled: true,
+  displayMode: 'inset',
+  useImage: false,
+  image: '',
+  showAvatar: false,
+  avatar: '',
+  title: '',
+  subtitle: '',
+  typewriterEnabled: false,
+  typewriterInterval: 110,
+  typewriterTexts: '',
+}
+
+
+const fallbackSiteStats: SiteStats = {
+  postCount: 0,
+  categoryCount: 0,
+  tagCount: 0,
+  shuoshuoCount: 0,
+  totalWordCount: 0,
+  commentCount: 0,
+  registeredDate: '',
+  lastActivityDate: '',
+  heatmapData: [],
+}
+
+const fallbackSiteInfo: SiteInfo = {
+  // 服务端直出站点名：接口失败时顶栏不至于空白一片
+  name: window.__ST_SITE_NAME__ || '',
+  description: '',
+  url: window.location.origin,
+  comments: {
+    requireNameEmail: true,
+    registrationOnly: false,
+    showEmailField: true,
+    showUrlField: true,
+    showCookiesOptIn: true,
+    captchaEnabled: false,
+    showPrivateOption: true,
+    showMarkdownOption: true,
+  },
+  hero: fallbackHeroSettings,
+  theme: fallbackThemeSettings,
+  externalRedirect: { enabled: true, delay: 5, target: '_self' },
+}
+
+const siteInfo = ref<SiteInfo>(fallbackSiteInfo)
+const primaryMenu = ref<MenuItem[]>([])
+const footerMenu = ref<MenuItem[]>([])
+const shellInitialState = ref(true)
+const shellLoadingState = ref(false)
+const shellLoadedState = ref(false)
+const shellErrorState = ref('')
+
+const CACHE_KEY = 'st_shell_v2'
+
+// v1 persisted the complete site-info response, including current-user and
+// arbitrary widget HTML. Remove that legacy entry rather than leaving private
+// data behind in localStorage after an upgrade.
+try {
+  localStorage.removeItem('st_shell_v1')
+} catch { /* storage may be unavailable */ }
+
+interface CachedShell {
+  primaryMenu: MenuItem[]
+  footerMenu: MenuItem[]
+}
+
+function normalizePixelSetting(value: unknown, fallback: number, min: number, max: number) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed)) return fallback
+  return Math.min(max, Math.max(min, Math.round(parsed)))
+}
+
+function mergeSiteInfo(next: SiteInfo): SiteInfo {
+  const nextTheme: Partial<ThemeSettings> = next.theme || {}
+
+  return {
+    ...fallbackSiteInfo,
+    ...next,
+    hero: { ...fallbackHeroSettings, ...next.hero },
+    theme: {
+      ...fallbackThemeSettings,
+      ...nextTheme,
+      containerMaxWidth: normalizePixelSetting(nextTheme.containerMaxWidth, 1500, 960, 2000),
+      articleMaxWidth: normalizePixelSetting(nextTheme.articleMaxWidth, 900, 680, 1200),
+      cardMeta: { ...fallbackThemeSettings.cardMeta!, ...nextTheme.cardMeta },
+    },
+    comments: {
+      requireNameEmail:
+        next.comments?.requireNameEmail ?? fallbackSiteInfo.comments!.requireNameEmail,
+      registrationOnly:
+        next.comments?.registrationOnly ?? fallbackSiteInfo.comments!.registrationOnly,
+      showEmailField:
+        next.comments?.showEmailField ?? fallbackSiteInfo.comments!.showEmailField,
+      showUrlField:
+        next.comments?.showUrlField ?? fallbackSiteInfo.comments!.showUrlField,
+      showCookiesOptIn:
+        next.comments?.showCookiesOptIn ?? fallbackSiteInfo.comments!.showCookiesOptIn,
+      captchaEnabled:
+        next.comments?.captchaEnabled ?? fallbackSiteInfo.comments!.captchaEnabled,
+      showPrivateOption:
+        next.comments?.showPrivateOption ?? fallbackSiteInfo.comments!.showPrivateOption,
+      showMarkdownOption:
+        next.comments?.showMarkdownOption ?? fallbackSiteInfo.comments!.showMarkdownOption,
+    },
+    externalRedirect: {
+      enabled: next.externalRedirect?.enabled ?? fallbackSiteInfo.externalRedirect!.enabled,
+      delay: next.externalRedirect?.delay ?? fallbackSiteInfo.externalRedirect!.delay,
+      target: next.externalRedirect?.target ?? fallbackSiteInfo.externalRedirect!.target,
+    },
+    stats: { ...fallbackSiteStats, ...next.stats },
+    socialLinks:
+      next.socialLinks && next.socialLinks.length > 0 ? next.socialLinks : undefined,
+  }
+}
+
+function applyShellData(data: CachedShell) {
+  primaryMenu.value = data.primaryMenu
+  footerMenu.value = data.footerMenu
+}
+
+export function useSiteShell() {
+  const shellLoading = computed(() => shellInitialState.value || shellLoadingState.value)
+
+  const ensureLoaded = async () => {
+    if (shellLoadedState.value) return
+
+    shellInitialState.value = false
+
+    // 1. Serve cached data immediately (stale-while-revalidate)
+    const cached = getCached<CachedShell>(CACHE_KEY)
+    if (cached) {
+      applyShellData(cached.data)
+      shellLoadedState.value = true
+    } else {
+      shellLoadingState.value = true
+      shellErrorState.value = ''
+    }
+
+    // 2. Background refresh — always fetch latest, silently update if changed
+    try {
+      // 菜单一次拿全（primary + footer），首屏少一个请求
+      const [nextSiteInfo, nextMenus] = await Promise.all([
+        fetchSiteInfo(),
+        fetchMenus().catch(() => null),
+      ])
+
+      const merged: CachedShell = {
+        primaryMenu: nextMenus ? nextMenus.primary : primaryMenu.value,
+        footerMenu: nextMenus ? nextMenus.footer : footerMenu.value,
+      }
+
+      siteInfo.value = mergeSiteInfo(nextSiteInfo)
+
+      const newVersion = computeHash(JSON.stringify(merged))
+
+      if (!cached || newVersion !== cached.version) {
+        setCache(CACHE_KEY, merged)
+        applyShellData(merged)
+      }
+
+      shellLoadedState.value = true
+    } catch (error) {
+      if (!cached) {
+        shellErrorState.value = getErrorMessage(error, '站点基础信息加载失败，请稍后重试。')
+      }
+      // With cache: silent — stale data is better than nothing
+    } finally {
+      shellLoadingState.value = false
+    }
+  }
+
+  return {
+    siteInfo: computed(() => siteInfo.value),
+    primaryMenu: computed(() => primaryMenu.value),
+    footerMenu: computed(() => footerMenu.value),
+    shellLoading,
+    shellError: computed(() => shellErrorState.value),
+    ensureLoaded,
+  }
+}

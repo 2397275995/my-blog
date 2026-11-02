@@ -1,0 +1,596 @@
+{
+  "siteInfo": {
+    "name": "Lxy's Blog",
+    "description": "记录技术、实践与思考",
+    "url": "https://iielxy.pages.dev/",
+    "introTitle": "Lxy's Blog",
+    "introSubtitle": "记录技术、实践与思考",
+    "hero": {
+      "enabled": true,
+      "title": "Lxy's Blog\n✦ 运维 / 效率工具",
+      "subtitle": "聚焦虚拟化、系统运维与效率工具，把复杂问题整理成可以复用的经验。这里记录踩过的坑、验证过的方案，以及那些值得写下来的思考。",
+      "showAvatar": true,
+      "avatar": "/img/avatar.jpg?v=1793601620",
+      "useImage": true,
+      "image": "/img/banner.svg"
+    },
+    "socialLinks": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/",
+        "icon": "github"
+      }
+    ],
+    "sidebar": [
+      {
+        "type": "profile",
+        "settings": {
+          "showStats": true,
+          "showHeatmap": true,
+          "showSocial": true
+        }
+      },
+      {
+        "type": "hitokoto",
+        "settings": {
+          "api": "https://v1.hitokoto.cn"
+        }
+      },
+      {
+        "type": "html",
+        "html": "<div class=\"aside-card\"><h3 class=\"aside-card__title\">分类 <span>Categories.</span></h3><ul style=\"list-style:none;margin:0;padding:0;display:grid;gap:2px\"><li><a href=\"/categories/suibi\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px\"><span>随笔</span><span style=\"font-size:12px;opacity:.55\">1</span></a></li><li><a href=\"/categories/xunihua\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px\"><span>虚拟化</span><span style=\"font-size:12px;opacity:.55\">4</span></a></li><li><a href=\"/categories/yunwei\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px\"><span>系统运维</span><span style=\"font-size:12px;opacity:.55\">11</span></a></li><li><a href=\"/categories/xiaolv\" style=\"display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px\"><span>效率工具</span><span style=\"font-size:12px;opacity:.55\">4</span></a></li></ul></div>"
+      },
+      {
+        "type": "html",
+        "html": "<div class=\"aside-card\"><h3 class=\"aside-card__title\">标签 <span>Tags.</span></h3><div style=\"display:flex;flex-wrap:wrap;gap:8px\"><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">Linux<span style=\"font-size:11px;opacity:.5\">6</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">VMware<span style=\"font-size:11px;opacity:.5\">2</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">systemd<span style=\"font-size:11px;opacity:.5\">2</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">排障<span style=\"font-size:11px;opacity:.5\">2</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">Docker<span style=\"font-size:11px;opacity:.5\">2</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">网络<span style=\"font-size:11px;opacity:.5\">2</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">Ubuntu<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">rsync<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">备份<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">SSH<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">Nginx<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">运维<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">容器<span style=\"font-size:11px;opacity:.5\">1</span></span><span style=\"display:inline-flex;align-items:center;gap:5px;font-size:12.5px;padding:5px 11px;border-radius:999px;border:1px solid var(--color-border);color:var(--color-muted-foreground);white-space:nowrap\">MySQL<span style=\"font-size:11px;opacity:.5\">1</span></span></div></div>"
+      },
+      {
+        "type": "html",
+        "html": "<div class=\"aside-card\"><h3 class=\"aside-card__title\">最近 <span>Recent.</span></h3><ul style=\"list-style:none;margin:0;padding:0;display:grid;gap:2px\"><li><a href=\"/xu-ni-ji-an-zhuang-bu-zhou/\" style=\"display:block;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px;line-height:1.6\">从零装一台虚拟机：VMware Workstation Pro + Ubuntu 26.04 LTS</a></li><li><a href=\"/ji-lu-si-xiang-yu-guan-cha/\" style=\"display:block;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px;line-height:1.6\">记录思想与观察的空间</a></li><li><a href=\"/rsync-增量备份/\" style=\"display:block;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px;line-height:1.6\">用 rsync 做增量备份：三条命令和三个坑</a></li><li><a href=\"/ssh-免密登录/\" style=\"display:block;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px;line-height:1.6\">SSH 免密登录与 config 别名</a></li><li><a href=\"/systemd-托管脚本/\" style=\"display:block;padding:8px 10px;border-radius:9px;text-decoration:none;color:var(--color-muted-foreground);font-size:13.5px;line-height:1.6\">用 systemd 托管自己的脚本</a></li></ul></div>"
+      },
+      {
+        "type": "techInfo"
+      }
+    ],
+    "icp": "",
+    "icpGov": "",
+    "about": "记录技术、实践与思考。\n## 关于本站\n聚焦虚拟化、系统运维与效率工具，把复杂问题整理成可以复用的经验。这里记录踩过的坑、验证过的方案，以及那些值得写下来的思考。\n## 联系方式\n目前通过 RSS 订阅获取更新，其他联系方式待补充。"
+  },
+  "menus": [
+    {
+      "id": 1,
+      "title": "首页",
+      "url": "/",
+      "icon": "home"
+    },
+    {
+      "id": 2,
+      "title": "写博客",
+      "url": "/write.html",
+      "icon": "edit",
+      "target": "_blank",
+      "description": "在线写作后台"
+    },
+    {
+      "id": 3,
+      "title": "AI 热点",
+      "url": "https://ai-trends-dp78y8lgvuo4.edgeone.dev/",
+      "icon": "flame",
+      "target": "_blank",
+      "description": "实时追踪最新 AI 技术动态"
+    },
+    {
+      "id": 4,
+      "title": "归档",
+      "url": "/archives",
+      "icon": "archive"
+    },
+    {
+      "id": 5,
+      "title": "论文",
+      "url": "/papers",
+      "icon": "book"
+    },
+    {
+      "id": 6,
+      "title": "项目",
+      "url": "/projects",
+      "icon": "folder"
+    },
+    {
+      "id": 7,
+      "title": "奖项",
+      "url": "/awards",
+      "icon": "trophy"
+    },
+    {
+      "id": 8,
+      "title": "关于",
+      "url": "/about",
+      "icon": "about"
+    }
+  ],
+  "categories": [
+    {
+      "id": 1,
+      "name": "随笔",
+      "slug": "suibi"
+    },
+    {
+      "id": 2,
+      "name": "虚拟化",
+      "slug": "xunihua"
+    },
+    {
+      "id": 3,
+      "name": "系统运维",
+      "slug": "yunwei"
+    },
+    {
+      "id": 4,
+      "name": "效率工具",
+      "slug": "xiaolv"
+    }
+  ],
+  "posts": [
+    {
+      "id": 2,
+      "slug": "xu-ni-ji-an-zhuang-bu-zhou",
+      "title": "从零装一台虚拟机：VMware Workstation Pro + Ubuntu 26.04 LTS",
+      "date": "2026-11-01T21:30:00",
+      "modified": "2026-11-01T21:30:00",
+      "category": "虚拟化",
+      "tags": [
+        "VMware",
+        "Ubuntu"
+      ],
+      "excerpt": "装工具、验镜像、配硬件、装系统、装完必做的五件事，以及新手最容易卡住的几个地方。",
+      "format": "html",
+      "body": "\n<p>虚拟化是运维的基本功。这篇从零开始，把在 Windows 上用 VMware Workstation Pro 装一台 Ubuntu 26.04 LTS 虚拟机的完整流程走一遍：装工具、验镜像、配硬件、装系统、装完之后的必要优化，以及新手最容易卡住的几个地方。</p>\n<p>跟着做完大概 40 分钟，其中一半时间在等下载和安装。做完你会得到一台能 SSH 登录、能拍快照、随时可以推倒重来的 Linux。</p>\n\n<h2 id=\"before\">一、动手前先确认三件事</h2>\n<p>很多人装到一半失败，问题都出在动手之前。</p>\n\n<h3>1. CPU 虚拟化有没有开</h3>\n<p>Windows 下按 Ctrl+Shift+Esc 打开任务管理器，切到「性能 → CPU」，右下角看「虚拟化」是不是「已启用」。如果是「已禁用」，需要重启进 BIOS/UEFI，找到 Intel VT-x（Intel 平台）或 SVM / AMD-V（AMD 平台）打开。</p>\n\n<h3>2. 内存够不够分</h3>\n<ul>\n<li>宿主机 16 GB：给虚拟机 4 GB，剩 12 GB 自己用，比较舒服。</li>\n<li>宿主机 8 GB：给 2 GB，并且装 Server 版（无图形界面）。</li>\n<li>底线是宿主机至少留 4 GB 给系统，不要把内存分满。</li>\n</ul>\n\n<h3>3. 磁盘放哪</h3>\n<p>别把虚拟磁盘放在 C 盘。一台 Ubuntu Server 建议预留 40 GB，桌面版 60 GB 起。VMware 的虚拟磁盘是「用多少长多少」，但上限要在建的时候给够——后期扩容比一开始就给足麻烦得多。</p>\n\n<h2 id=\"install-vmware\">二、安装 VMware Workstation Pro</h2>\n<p>Workstation Pro 从 2024 年 11 月起对个人和商业用户都免费，不需要许可证密钥，也不用担心试用期。当前主线版本是按「年份 + 半年」命名的 26H1。</p>\n\n<h3>下载</h3>\n<p>要在 Broadcom 的支持站点下载，需要先注册一个免费账号：</p>\n<ul>\n<li>注册：profile.broadcom.com/web/registration</li>\n<li>登录后打开免费下载页：support.broadcom.com/group/ecx/productdownloads?subfamily=VMware Workstation Pro&amp;freeDownloads=true</li>\n</ul>\n<p>展开「VMware Workstation Pro 26H1 for Windows」，选最新版本号。先把 Terms and Conditions 点开读一遍（不点开没法勾选同意），勾上 I agree，右侧下载按钮才会亮。</p>\n\n<h3>安装时唯一要小心的地方：Hyper-V 冲突</h3>\n<p>如果安装向导提示检测到 Hyper-V，会让你二选一：</p>\n<ul>\n<li><strong>自动安装 Windows Hypervisor Platform（WHP）</strong>：保留 Hyper-V，VMware 通过 WHP 运行。装完能用，性能略降，但不用改系统设置。选这个最省事。</li>\n<li><strong>关闭 Hyper-V</strong>：性能最好，但要用管理员权限执行 bcdedit /set hypervisorlaunchtype off，并在「启用或关闭 Windows 功能」里取消勾选「Hyper-V」「虚拟机平台」「Windows 虚拟机监控程序平台」，然后重启。</li>\n</ul>\n<p>如果只是想学 Linux，选第一个就行，不要为了几帧性能把 Docker Desktop 和 WSL2 弄坏。</p>\n\n<h2 id=\"iso\">三、下载并校验系统镜像</h2>\n<p>示例用 Ubuntu 26.04 LTS（2026 年 4 月发布的长期支持版）。文件名里 live-server 是服务器版，desktop 是桌面版，amd64 是 64 位 x86。</p>\n<p>国内建议直接从镜像站下载，速度差好几倍：</p>\n<ul>\n<li>清华 TUNA：mirrors.tuna.tsinghua.edu.cn/ubuntu-releases/26.04/</li>\n<li>阿里云：mirrors.aliyun.com/ubuntu-releases/26.04/</li>\n</ul>\n<p><strong>下完一定要校验 SHA256。</strong>这一步看着多余，但能挡掉下载中断导致的镜像损坏——那种情况装到一半才报错，排查起来非常费时间。</p>\n<pre><code># Linux / macOS / Git Bash\nsha256sum ubuntu-26.04.1-live-server-amd64.iso\n\n# Windows PowerShell\nGet-FileHash .\\\\ubuntu-26.04.1-live-server-amd64.iso -Algorithm SHA256</code></pre>\n<p>把输出和镜像站同目录下 SHA256SUMS 文件里的值对一下，一致就说明文件完整。</p>\n\n<h2 id=\"create-vm\">四、新建虚拟机</h2>\n<p>Workstation 里点「文件 → 新建虚拟机」，选「自定义」而不是「典型」。典型模式会替你定好一堆参数，其中磁盘控制器和网络模式往往不是你要的。</p>\n\n<h3>硬件怎么给</h3>\n<ul>\n<li><strong>CPU</strong>：2 核起步，别超过物理核数。</li>\n<li><strong>内存</strong>：Server 版 2 GB 够用，Desktop 版 4 GB 起。</li>\n<li><strong>磁盘</strong>：40 GB，存储方式选「拆分成多个文件」，方便以后把整个目录拷到别的机器。</li>\n<li><strong>磁盘类型</strong>：NVMe 或 SCSI 都行，NVMe 略快。</li>\n</ul>\n\n<h3>网络模式怎么选（这一步最容易选错）</h3>\n<ul>\n<li><strong>NAT</strong>（VMnet8）：虚拟机借宿主机上网，宿主机能主动连虚拟机，外网连不进来。<strong>新手建议默认选它</strong>，最省心。</li>\n<li><strong>桥接</strong>（VMnet0）：虚拟机相当于局域网里一台独立机器，和宿主机平级，路由器会给它单独分 IP。适合模拟「真实服务器」或者从别的设备访问它。</li>\n<li><strong>仅主机</strong>（VMnet1）：只能和宿主机通信，完全隔离。适合做实验，不怕污染生产网络。</li>\n</ul>\n<p>NAT 模式默认网段是 192.168.x.0/24，网关是 x.x.x.2，DHCP 从 .128 开始分配。这些可以在「编辑 → 虚拟网络编辑器」里改。</p>\n\n<h3>挂载 ISO</h3>\n<p>在虚拟机设置的「CD/DVD」里选「使用 ISO 映像文件」，指向刚下载的 iso，「启动时连接」要勾上。</p>\n\n<h2 id=\"os\">五、安装系统</h2>\n<p>开机后进入安装器，按顺序走：</p>\n<ul>\n<li><strong>语言</strong>：服务器建议选 English。选中文会出现半屏中英混杂，后期 locale 也容易出问题。</li>\n<li><strong>键盘布局</strong>：默认 English (US)。</li>\n<li><strong>安装类型</strong>：Ubuntu Server。</li>\n<li><strong>网络</strong>：默认 DHCP，屏幕会显示分到的 IP，记下来。</li>\n<li><strong>代理</strong>：留空。</li>\n<li><strong>镜像源</strong>：可以在这里直接改成 mirrors.aliyun.com/ubuntu，比装完再改省一步。</li>\n<li><strong>存储</strong>：Use an entire disk，并勾选 Set up this disk as an LVM group。LVM 的好处是以后扩容不用重装。</li>\n<li><strong>用户</strong>：填主机名、用户名、密码。密码别设太简单，后面 sudo 要用。</li>\n<li><strong>SSH</strong>：<strong>务必勾选 Install OpenSSH server</strong>。这一步不勾，装完只能对着 VMware 窗口敲键盘，连复制粘贴都费劲。</li>\n<li><strong>预装软件</strong>：不选，需要什么自己装。</li>\n</ul>\n<p>装完重启。VMware 会提示「请移除安装介质后按回车」，直接回车，它会自动断开 ISO，从硬盘启动。</p>\n\n<h2 id=\"after\">六、装完必做的五件事</h2>\n\n<h3>1. 装 open-vm-tools</h3>\n<p>这是 VMware 官方的客户机工具，负责时间同步、关机信号、共享文件夹。</p>\n<pre><code>sudo apt update\nsudo apt install -y open-vm-tools open-vm-tools-desktop</code></pre>\n<p>服务器版装 open-vm-tools 就够；桌面版加上 desktop 包才有剪贴板共享和自适应分辨率。</p>\n\n<h3>2. 换国内 apt 源</h3>\n<p>Ubuntu 24.04 之后源配置改成了 deb822 格式，文件是 /etc/apt/sources.list.d/ubuntu.sources，已经不是以前的 sources.list 了。</p>\n<pre><code>sudo cp /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list.d/ubuntu.sources.bak\nsudo sed -i 's|http://archive.ubuntu.com/ubuntu/|https://mirrors.aliyun.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources\nsudo sed -i 's|http://security.ubuntu.com/ubuntu/|https://mirrors.aliyun.com/ubuntu/|g' /etc/apt/sources.list.d/ubuntu.sources\nsudo apt update</code></pre>\n\n<h3>3. 配静态 IP（NAT 模式下可选）</h3>\n<p>DHCP 分到的地址每次开机可能变，SSH 客户端就要跟着改配置。把它固定下来：</p>\n<pre><code>sudo nano /etc/netplan/50-cloud-init.yaml</code></pre>\n<pre><code>network:\n  version: 2\n  ethernets:\n    ens33:\n      dhcp4: false\n      addresses:\n        - 192.168.100.10/24\n      routes:\n        - to: default\n          via: 192.168.100.2\n      nameservers:\n        addresses: [223.5.5.5, 119.29.29.29]</code></pre>\n<pre><code>sudo netplan apply</code></pre>\n<p>注意三点：网卡名先用 ip -br a 看一眼，可能是 ens33、ens160 或 ens37；网关填你在「虚拟网络编辑器」里看到的值，不要随手写；gateway4 的写法已经废弃，要用上面的 routes。</p>\n\n<h3>4. 验证 SSH</h3>\n<pre><code>systemctl status ssh\nip -br a\nssh 你的用户名@192.168.100.10</code></pre>\n\n<h3>5. 时间同步</h3>\n<pre><code>timedatectl set-ntp true\ntimedatectl status</code></pre>\n<p>虚拟机挂起再恢复后时间容易漂，装好 open-vm-tools 一般就正常了。</p>\n\n<h2 id=\"snapshot\">七、快照：给自己留一颗后悔药</h2>\n<p>这是虚拟机相对真机最大的好处。</p>\n<ul>\n<li><strong>拍快照</strong>：虚拟机 → 快照 → 拍摄快照。装软件、改配置之前拍一个，改坏了 10 秒回到原样。</li>\n<li><strong>克隆</strong>：虚拟机 → 管理 → 克隆。完整克隆是独立副本，链接克隆省磁盘但依赖父虚拟机。</li>\n</ul>\n<p>一个建议：装完系统、配好网络和 SSH 之后，先拍一个叫「干净系统」的快照，再做其他实验。以后所有乱七八糟的尝试，都从这个快照分叉出去。</p>\n<p><strong>克隆之后记得改机器标识</strong>，否则两台机器的 machine-id 和 IP 会打架：</p>\n<pre><code>sudo rm /etc/machine-id\nsudo systemd-machine-id-setup\nsudo hostnamectl set-hostname node2</code></pre>\n\n<h2 id=\"faq\">八、常见问题速查</h2>\n\n<h3>提示「此主机支持 Intel VT-x，但 Intel VT-x 处于禁用状态」</h3>\n<p>进 BIOS 打开虚拟化。如果 BIOS 里已经开了还报这个错，检查 Windows 是否开着「内核隔离 → 内存完整性」，把它关掉再重启。</p>\n\n<h3>装完开机黑屏或分辨率不对</h3>\n<p>虚拟机设置里关掉「加速 3D 图形」，显存调到 4 GB 以上。桌面版装完 open-vm-tools-desktop 后分辨率会自适应窗口。</p>\n\n<h3>虚拟机能上网，但宿主机 SSH 连不上</h3>\n<ul>\n<li>确认装系统时勾了 OpenSSH server，或手动补装：sudo apt install -y openssh-server</li>\n<li>确认 NAT 模式下虚拟机 IP 是 192.168.x.x 网段，宿主机连的是这个地址</li>\n<li>Windows 服务里检查「VMware NAT Service」和「VMware DHCP Service」是否在运行，这两个服务挂了 NAT 就废了</li>\n<li>虚拟机里查防火墙：sudo ufw status</li>\n</ul>\n\n<h3>磁盘不够了</h3>\n<p>先在 VMware 里扩容虚拟磁盘，再进系统把分区撑开。用了 LVM 的话：</p>\n<pre><code>sudo growpart /dev/sda 3\nsudo pvresize /dev/sda3\nsudo lvextend -l +100%FREE /dev/ubuntu-vg/ubuntu-lv\nsudo resize2fs /dev/ubuntu-vg/ubuntu-lv</code></pre>\n\n<h3>复制粘贴和拖拽文件不生效</h3>\n<p>服务器版没有图形界面，本来就没有剪贴板共享，用 SSH 就好。桌面版装 open-vm-tools-desktop 后，在 VMware 设置里把「客户机隔离」的复制粘贴勾上。</p>\n\n<h2 id=\"end\">九、小结</h2>\n<p>整个流程可以压缩成一句话：<strong>确认硬件虚拟化 → 装 Workstation → 验镜像 → 自定义建机（NAT）→ 装系统时勾 SSH → 装 open-vm-tools → 拍快照</strong>。</p>\n<p>真正容易出问题的不是安装本身，而是前面几个决定：内存分多少、磁盘放哪、网络用哪种模式、装系统时有没有勾 SSH。这几步想清楚了，后面基本一路顺。</p>\n<p>下一步可以在这台机器上装 Docker 练容器、开三台克隆做集群实验，或者试试 KVM。这些内容后面单独写。</p>\n",
+      "published": true,
+      "cover": "/covers/post-2.svg"
+    },
+    {
+      "id": 1,
+      "slug": "ji-lu-si-xiang-yu-guan-cha",
+      "title": "记录思想与观察的空间",
+      "date": "2026-11-01T12:00:00",
+      "modified": "2026-11-01T12:00:00",
+      "category": "随笔",
+      "tags": [],
+      "excerpt": "有些想法在心里停留很久，直到某一天，我们决定把它们写下来。",
+      "format": "html",
+      "body": "<p>有些想法在心里停留很久，直到某一天，我们决定把它们写下来。iielxy 就从这样的一个念头开始：留出一方空间，记录值得分享的观察、故事与思考。</p><p>这里的内容会随着写作慢慢生长。无论你是偶然发现 iielxy，还是带着好奇而来，都欢迎读一读、想一想，也期待这些文字能为你带来一点启发。</p>",
+      "published": true,
+      "cover": "/covers/post-1.svg"
+    },
+    {
+      "id": 3,
+      "slug": "rsync-增量备份",
+      "title": "用 rsync 做增量备份：三条命令和三个坑",
+      "date": "2026-10-31T08:30:00",
+      "modified": "2026-10-31T08:30:00",
+      "category": "系统运维",
+      "tags": [
+        "rsync",
+        "备份"
+      ],
+      "excerpt": "日常备份最省事的工具还是 rsync：只传差异、能断点续传、保留权限和时间戳。",
+      "format": "md",
+      "body": "日常备份最省事的工具还是 rsync：只传差异、能断点续传、还能保留权限和时间戳。\n\n## 基本用法\n\n```bash\nrsync -avh --delete /data/app/ /backup/app/\n```\n\n`-a` 归档模式，保留权限属主时间；`-v` 输出过程；`-h` 人类可读；`--delete` 让目标端删掉源端已不存在的文件。\n\n## 走 SSH 备到另一台机器\n\n```bash\nrsync -avh --delete -e \"ssh -p 22\" /data/app/ backup@10.0.0.8:/backup/app/\n```\n\n配合免密登录就不用手输密码。\n\n## 三个容易踩的坑\n\n- **结尾斜杠**：`/data/app/` 同步的是目录内容，`/data/app` 会在目标端多套一层 app 目录。\n- **--delete 先干跑**：加 `-n` 看清单，确认没删错再真跑。\n- **大文件中断**：加 `--partial --append-verify` 才能续传。\n\n## 定时执行\n\n```bash\n0 3 * * * rsync -a --delete /data/app/ /backup/app/ >> /var/log/rsync.log 2>&1\n```\n\n备份完随手 diff 一个文件验证一下，别等真要恢复时才发现备份是空的。",
+      "published": true,
+      "cover": "/covers/post-3.svg"
+    },
+    {
+      "id": 4,
+      "slug": "ssh-免密登录",
+      "title": "SSH 免密登录与 config 别名",
+      "date": "2026-10-30T09:10:00",
+      "modified": "2026-10-30T09:10:00",
+      "category": "系统运维",
+      "tags": [
+        "SSH",
+        "Linux"
+      ],
+      "excerpt": "生成密钥、推公钥、配 config，以后一句 ssh node1 就进去。",
+      "format": "md",
+      "body": "每天敲十几次密码，早晚会烦。\n\n## 生成密钥\n\n```bash\nssh-keygen -t ed25519 -C \"note@iielxy\"\n```\n\n一路回车，生成 `~/.ssh/id_ed25519` 和对应的 `.pub`。\n\n## 推公钥上去\n\n```bash\nssh-copy-id -i ~/.ssh/id_ed25519.pub user@10.0.0.8\n```\n\n## 配 config，少记一堆参数\n\n`~/.ssh/config`：\n\n```\nHost node1\n    HostName 10.0.0.8\n    User deploy\n    Port 2222\n    IdentityFile ~/.ssh/id_ed25519\n```\n\n之后 `ssh node1` 就够了，`scp`、`rsync -e ssh` 也都能直接写 `node1:`。\n\n## 免密不生效？先查权限\n\n```bash\nchmod 700 ~/.ssh\nchmod 600 ~/.ssh/authorized_keys\n```\n\n报错原因在服务端日志里能看到：`tail -f /var/log/auth.log`。",
+      "published": true,
+      "cover": "/covers/post-4.svg"
+    },
+    {
+      "id": 5,
+      "slug": "systemd-托管脚本",
+      "title": "用 systemd 托管自己的脚本",
+      "date": "2026-10-29T20:40:00",
+      "modified": "2026-10-29T20:40:00",
+      "category": "系统运维",
+      "tags": [
+        "systemd",
+        "Linux"
+      ],
+      "excerpt": "比 nohup 可靠：开机自启、崩了自动拉起、日志进 journal。",
+      "format": "md",
+      "body": "写个脚本用 `nohup` 扔到后台是能跑，但重启就没了、挂了也不会自己起来。交给 systemd 更省心。\n\n## 先写服务文件\n\n`/etc/systemd/system/myjob.service`：\n\n```ini\n[Unit]\nDescription=My batch job\nAfter=network.target\n\n[Service]\nType=simple\nUser=deploy\nWorkingDirectory=/opt/myjob\nExecStart=/usr/bin/python3 /opt/myjob/main.py\nRestart=always\nRestartSec=5\nStandardOutput=journal\nStandardError=journal\n\n[Install]\nWantedBy=multi-user.target\n```\n\n`Restart=always` 是关键：进程崩了 5 秒后自动拉起。\n\n## 常用命令\n\n```bash\nsudo systemctl daemon-reload       # 改了 service 文件必须执行\nsudo systemctl enable --now myjob  # 开机自启并立刻启动\nsudo systemctl status myjob\njournalctl -u myjob -f             # 实时看日志\n```\n\n## 定时任务用 timer 更合适\n\n配一个同名的 `myjob.timer`，比 crontab 多了日志、能写 `Persistent=true` 在关机期间错过时补执行。",
+      "published": true,
+      "cover": "/covers/post-5.svg"
+    },
+    {
+      "id": 6,
+      "slug": "磁盘空间排查",
+      "title": "磁盘满了，怎么找出是谁占的",
+      "date": "2026-10-28T10:15:00",
+      "modified": "2026-10-28T10:15:00",
+      "category": "系统运维",
+      "tags": [
+        "Linux",
+        "排障"
+      ],
+      "excerpt": "df 满了但 du 加起来不大？大概率是进程占着已删除的文件。",
+      "format": "md",
+      "body": "`df -h` 显示满了，但不知道是谁吃的。按这个顺序查。\n\n## 第一步：确认挂载点\n\n```bash\ndf -h\n```\n\n## 第二步：找出大目录\n\n```bash\ndu -h --max-depth=1 / | sort -rh | head -20\n```\n\n一层层往下钻，比直接 `du -sh *` 快得多。\n\n## 第三步：被删除但没释放的文件\n\n这是最容易卡住的情况：`du` 加起来不大，`df` 却还是满。说明有进程还占着已删文件的句柄。\n\n```bash\nlsof +L1 | sort -k7 -rn | head\n```\n\n处理方式是重启对应进程。光改配置不重启，空间永远不会释放。\n\n## 第四步：inode 用完\n\n报错写着 \"No space left on device\"，`df -h` 却还有空间——看 `df -i`，很可能是 inode 耗尽，常见于堆满小文件的日志目录。\n\n## 顺手清理\n\n```bash\njournalctl --vacuum-time=7d   # 日志只留 7 天\ndocker system df              # 先看 Docker 占了多少\n```",
+      "published": true,
+      "cover": "/covers/post-6.svg"
+    },
+    {
+      "id": 7,
+      "slug": "nginx-反向代理",
+      "title": "Nginx 反向代理最小配置",
+      "date": "2026-10-27T14:20:00",
+      "modified": "2026-10-27T14:20:00",
+      "category": "系统运维",
+      "tags": [
+        "Nginx",
+        "运维"
+      ],
+      "excerpt": "proxy_pass 加三行 X-Forwarded-*，否则后端拿到的全是 127.0.0.1。",
+      "format": "md",
+      "body": "把内网服务暴露出去，最省事的是 Nginx 反向代理。\n\n## 最小配置\n\n`/etc/nginx/conf.d/app.conf`：\n\n```nginx\nserver {\n    listen 80;\n    server_name app.example.com;\n\n    location / {\n        proxy_pass http://127.0.0.1:8080;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n}\n```\n\n三行 `X-Forwarded-*` 别省，否则后端日志和限流拿到的全是 127.0.0.1。\n\n## 生效\n\n```bash\nsudo nginx -t && sudo systemctl reload nginx\n```\n\n先 `-t` 测语法再 reload，比直接重启安全。\n\n## 常见问题\n\n- **502**：后端没起或端口不对，先 `curl 127.0.0.1:8080` 确认。\n- **静态资源 404**：注意 `proxy_pass` 结尾有没有斜杠，带不带行为不一样。\n- **传大文件失败**：默认限 1 MB，加 `client_max_body_size 50m;`。",
+      "published": true,
+      "cover": "/covers/post-7.svg"
+    },
+    {
+      "id": 8,
+      "slug": "docker-常用命令",
+      "title": "Docker 常用命令速查",
+      "date": "2026-10-26T11:05:00",
+      "modified": "2026-10-26T11:05:00",
+      "category": "虚拟化",
+      "tags": [
+        "Docker",
+        "容器"
+      ],
+      "excerpt": "容器、镜像、清理三组，够应付九成日常。",
+      "format": "md",
+      "body": "不常用的抄一遍不如理解几条，剩下的 `--help` 就够了。\n\n## 容器\n\n```bash\ndocker ps -a                 # 含已停止\ndocker logs -f --tail 100 容器名\ndocker exec -it 容器名 bash\ndocker inspect 容器名 | grep -i ip\n```\n\n## 镜像\n\n```bash\ndocker images\ndocker rmi 镜像:tag\ndocker image prune -f        # 清悬空镜像\n```\n\n## 清理磁盘，从轻到重\n\n```bash\ndocker system df          # 先看占了多少\ndocker container prune    # 停掉的容器\ndocker image prune -a     # 未被引用的镜像\ndocker volume prune       # 未挂载的数据卷\n```\n\n`docker system prune -a --volumes` 一把梭要谨慎，会把没在跑的容器的数据卷一起删掉。\n\n## 排查思路\n\n容器起不来先看 `docker logs`，再看 `docker inspect` 里的 `State.ExitCode`：137 是被 kill（多半 OOM），1 一般是程序自己报错退出。",
+      "published": true,
+      "cover": "/covers/post-8.svg"
+    },
+    {
+      "id": 9,
+      "slug": "docker-compose-mysql",
+      "title": "用 Docker Compose 跑一个 MySQL",
+      "date": "2026-10-25T16:30:00",
+      "modified": "2026-10-25T16:30:00",
+      "category": "虚拟化",
+      "tags": [
+        "Docker",
+        "MySQL"
+      ],
+      "excerpt": "一条 compose 文件，比记一堆 run 参数可靠得多。",
+      "format": "md",
+      "body": "单机跑数据库，compose 文件比记一堆 `docker run` 参数可靠。\n\n```yaml\nservices:\n  mysql:\n    image: mysql:8.4\n    container_name: mysql8\n    restart: unless-stopped\n    ports:\n      - \"3306:3306\"\n    environment:\n      MYSQL_ROOT_PASSWORD: changeit\n      MYSQL_DATABASE: app\n      TZ: Asia/Shanghai\n    command:\n      --character-set-server=utf8mb4\n      --collation-server=utf8mb4_unicode_ci\n    volumes:\n      - ./data:/var/lib/mysql\n    healthcheck:\n      test: [\"CMD\", \"mysqladmin\", \"ping\", \"-h\", \"127.0.0.1\"]\n      interval: 10s\n      retries: 5\n```\n\n`docker compose up -d` 起来。\n\n## 三个要点\n\n- **数据必须挂出来**：`./data:/var/lib/mysql`，否则 `down` 一次数据全没。\n- **字符集写进 command**：临时改配置重启就丢，固化到启动参数才作数。\n- **密码别写进版本库**：用 `.env` 加 `MYSQL_ROOT_PASSWORD=${DB_PASS}`。\n\n## 连不上按这个顺序查\n\n```bash\ndocker compose ps\ndocker compose logs mysql --tail 50\ndocker exec -it mysql8 mysql -uroot -p\n```",
+      "published": true,
+      "cover": "/covers/post-9.svg"
+    },
+    {
+      "id": 10,
+      "slug": "tmux-常用操作",
+      "title": "tmux 常用操作，够用了",
+      "date": "2026-10-24T21:00:00",
+      "modified": "2026-10-24T21:00:00",
+      "category": "效率工具",
+      "tags": [
+        "tmux",
+        "Linux"
+      ],
+      "excerpt": "SSH 断线任务不死，这是 tmux 唯一但足够重要的理由。",
+      "format": "md",
+      "body": "SSH 断线，跑了一半的命令跟着死。tmux 就是为这个存在的。\n\n## 最常用的五个\n\n```bash\ntmux                    # 新建会话\ntmux ls                 # 列出会话\ntmux attach -t 0        # 回去\ntmux kill-session -t 0\n```\n\n前缀键默认 `Ctrl+b`，先按它再按功能键：\n\n- `c` 新建窗口，`n` / `p` 切窗口\n- `d` 断开会话（进程继续跑）\n- `%` 左右分屏，`\"` 上下分屏\n- 方向键在分屏间切换\n\n## 我的用法\n\n长任务统一这样起：\n\n```bash\ntmux new -s build\n# 在里面跑任务，然后 Ctrl+b d 离开\n```\n\n第二天 `tmux attach -t build` 回去看结果，日志窗口原地还在。\n\n## 一个小改进\n\n把前缀键改成 `Ctrl+a`，和 screen 一致，手指更顺：\n\n```bash\necho \"set -g prefix C-a\" >> ~/.tmux.conf\ntmux source-file ~/.tmux.conf\n```",
+      "published": true,
+      "cover": "/covers/post-10.svg"
+    },
+    {
+      "id": 11,
+      "slug": "journalctl-查日志",
+      "title": "用 journalctl 查系统日志",
+      "date": "2026-10-23T09:45:00",
+      "modified": "2026-10-23T09:45:00",
+      "category": "系统运维",
+      "tags": [
+        "systemd",
+        "日志"
+      ],
+      "excerpt": "三组参数：-u 按服务、-p 按级别、-b 按启动次。",
+      "format": "md",
+      "body": "systemd 的日志比 `/var/log/messages` 好用，前提是会查。\n\n## 常用\n\n```bash\njournalctl -u nginx -f\njournalctl -u nginx --since \"1 hour ago\"\njournalctl -p err -b\njournalctl --since \"2026-10-01\" --until \"2026-10-02 12:00\"\n```\n\n## 三组参数记牢\n\n- `-u`：按服务过滤\n- `-p`：按级别，`err` 往上还有 `crit`、`alert`、`emerg`\n- `-b`：按启动次，`-b -1` 是上一次启动\n\n排查「昨天重启前发生了什么」，`journalctl -b -1 -p err` 基本一击命中。\n\n## 占用太大\n\n```bash\njournalctl --disk-usage\nsudo journalctl --vacuum-size=500M\n```\n\n永久限制写进 `/etc/systemd/journald.conf` 的 `SystemMaxUse=500M`。\n\n## 导出给同事\n\n```bash\njournalctl -u app --since today -o short-iso > app.log\n```\n\n`-o short-iso` 带完整时间戳，比默认格式好对齐。",
+      "published": true,
+      "cover": "/covers/post-11.svg"
+    },
+    {
+      "id": 12,
+      "slug": "crontab-五个坑",
+      "title": "crontab 定时任务不生效的五个原因",
+      "date": "2026-10-22T19:15:00",
+      "modified": "2026-10-22T19:15:00",
+      "category": "系统运维",
+      "tags": [
+        "cron",
+        "Linux"
+      ],
+      "excerpt": "环境变量、工作目录、%、输出、时区，按这个顺序查。",
+      "format": "md",
+      "body": "定时任务不生效，九成是下面五个原因之一。\n\n## 1. 环境变量不同\n\ncron 的 PATH 很短，`python` 可能根本找不到。用绝对路径，或者顶部声明：\n\n```bash\nPATH=/usr/local/bin:/usr/bin:/bin\n```\n\n## 2. 工作目录不是你以为的那个\n\ncrontab 执行时不会 `cd` 到脚本目录：\n\n```bash\n0 3 * * * cd /opt/job && ./run.sh\n```\n\n## 3. % 有特殊含义\n\n命令里的 `%` 会被当成换行，`date +%F` 必须写成 `date +\\%F`。\n\n## 4. 输出被丢了\n\n默认 cron 会尝试发邮件，没配邮件等于没日志：\n\n```bash\n0 3 * * * /opt/job/run.sh >> /var/log/job.log 2>&1\n```\n\n## 5. 时区不对\n\n容器里跑 cron 尤其容易：镜像默认 UTC，看起来\"晚了 8 小时\"。设 `TZ=Asia/Shanghai`。\n\n## 排查\n\n```bash\ncrontab -l\ngrep CRON /var/log/syslog | tail -20\n```",
+      "published": true,
+      "cover": "/covers/post-12.svg"
+    },
+    {
+      "id": 13,
+      "slug": "ufw-防火墙",
+      "title": "ufw 防火墙基础：先放行 SSH 再启用",
+      "date": "2026-10-21T08:50:00",
+      "modified": "2026-10-21T08:50:00",
+      "category": "系统运维",
+      "tags": [
+        "ufw",
+        "安全"
+      ],
+      "excerpt": "顺序搞反会把自己关在门外，这是新手最常犯的错。",
+      "format": "md",
+      "body": "云主机开箱就该开的防火墙，命令比 iptables 好记太多。\n\n## 先放行 SSH，再启用\n\n顺序搞反会把自己锁在外面：\n\n```bash\nsudo ufw allow 22/tcp\nsudo ufw enable\nsudo ufw status verbose\n```\n\n## 常用规则\n\n```bash\nsudo ufw allow 80,443/tcp\nsudo ufw allow from 10.0.0.0/24 to any port 3306\nsudo ufw delete allow 80/tcp\nsudo ufw status numbered     # 带序号，方便按序号删\n```\n\n## 限速防爆破\n\n```bash\nsudo ufw limit 22/tcp\n```\n\n同一 IP 短时间多次连接会被限流，挡掉大部分暴力破解。\n\n## 两个注意\n\n- Docker 发布的端口会**绕过 ufw**（走 nat 表），要额外在 `DOCKER-USER` 链里限制。\n- 改规则前先确认云厂商的安全组，两层防火墙容易互相打脸。",
+      "published": true,
+      "cover": "/covers/post-13.svg"
+    },
+    {
+      "id": 14,
+      "slug": "负载怎么看",
+      "title": "load average 到底多高算高",
+      "date": "2026-10-20T15:40:00",
+      "modified": "2026-10-20T15:40:00",
+      "category": "系统运维",
+      "tags": [
+        "Linux",
+        "性能"
+      ],
+      "excerpt": "CPU 不高但 load 很高，加机器没用，得查磁盘和锁。",
+      "format": "md",
+      "body": "`uptime` 里的 load average 到底多高算高？\n\n## 先看几个核\n\n```bash\nnproc\n```\n\n4 核机器，load 长期在 4 左右说明满载；超过核数一倍还没降下来就该查了。\n\n## 分清三种压力\n\n```bash\ntop            # 交互看，按 1 展开每个核\niostat -x 1    # 磁盘 %util 接近 100 说明 IO 打满\nvmstat 1       # r 是被阻塞进程数，b 是等 IO 的\n```\n\nCPU 不高、load 却很高，基本就是 IO 等待或者大量进程卡在 D 状态。\n\n## 揪出具体进程\n\n```bash\npidstat -u 1\npidstat -d 1\nps aux --sort=-%cpu | head\n```\n\n## 一个经验值\n\n`load / 核数` 超过 1 且持续 15 分钟以上就该动手，短时尖刺不用管。真正要警惕的是 load 高但 CPU 利用率低——那种情况加机器也没用，得查磁盘或者锁竞争。",
+      "published": true,
+      "cover": "/covers/post-14.svg"
+    },
+    {
+      "id": 15,
+      "slug": "网络排查五件套",
+      "title": "网络不通时的排查顺序",
+      "date": "2026-10-19T10:30:00",
+      "modified": "2026-10-19T10:30:00",
+      "category": "系统运维",
+      "tags": [
+        "网络",
+        "排障"
+      ],
+      "excerpt": "ping、telnet、ss、dig、curl，按层往下，别一上来就重启。",
+      "format": "md",
+      "body": "网络不通，按层往下排，别一上来就重启。\n\n## 1. 通不通\n\n```bash\nping -c 4 10.0.0.8\n```\n\n## 2. 端口开没开\n\n```bash\nnc -zv 10.0.0.8 3306\n```\n\nping 通但端口不通，问题在服务或防火墙。\n\n## 3. 服务有没有监听\n\n```bash\nss -lntp | grep 3306\n```\n\n只有 `127.0.0.1:3306` 说明只监听本机，外部当然连不上，改配置绑定 `0.0.0.0`。\n\n## 4. 域名解析对不对\n\n```bash\ndig +short example.com\ndig @8.8.8.8 example.com\n```\n\n两个结果不一样，就是本地 DNS 的问题。\n\n## 5. 应用层返回了什么\n\n```bash\ncurl -v http://10.0.0.8:8080/health\n```\n\n`-v` 能看到完整握手和响应头，比猜快得多。\n\n## 顺序小结\n\n内网先 `ss` 看监听，再 `nc` 测端口；跨网段加 `traceroute`；HTTP 服务直接 `curl -v`。",
+      "published": true,
+      "cover": "/covers/post-15.svg"
+    },
+    {
+      "id": 16,
+      "slug": "iptables-端口转发",
+      "title": "用 iptables 做端口转发",
+      "date": "2026-10-18T17:10:00",
+      "modified": "2026-10-18T17:10:00",
+      "category": "系统运维",
+      "tags": [
+        "iptables",
+        "网络"
+      ],
+      "excerpt": "两条 NAT 规则，第二条最容易漏，漏了就表现为能发不能收。",
+      "format": "md",
+      "body": "把 A 机器的 8080 转到 B 机器的 80，两条规则就够。\n\n## 打开转发\n\n```bash\nsudo sysctl -w net.ipv4.ip_forward=1\necho \"net.ipv4.ip_forward=1\" | sudo tee -a /etc/sysctl.conf\n```\n\n## 加规则\n\n```bash\nsudo iptables -t nat -A PREROUTING -p tcp --dport 8080 \\\n  -j DNAT --to-destination 192.168.1.20:80\n\nsudo iptables -t nat -A POSTROUTING -d 192.168.1.20 -p tcp --dport 80 \\\n  -j SNAT --to-source 192.168.1.10\n```\n\n第二条最容易漏。漏了就是「能发出请求但收不到响应」，因为回包从默认网关走了。\n\n## 保存\n\niptables 重启会丢：\n\n```bash\nsudo apt install iptables-persistent\nsudo netfilter-persistent save\n```\n\n## 更省事的做法\n\n只是转发 TCP，用 `socat` 或者 nginx 的 stream 模块更好维护，规则也不会散在两张表里。",
+      "published": true,
+      "cover": "/covers/post-16.svg"
+    },
+    {
+      "id": 17,
+      "slug": "cloudflare-pages-部署",
+      "title": "静态站免费部署到 Cloudflare Pages",
+      "date": "2026-10-17T13:25:00",
+      "modified": "2026-10-17T13:25:00",
+      "category": "效率工具",
+      "tags": [
+        "部署",
+        "Cloudflare"
+      ],
+      "excerpt": "拖拽上传一分钟上线，但别忘了 _redirects，否则刷新就 404。",
+      "format": "md",
+      "body": "把静态站免费挂到公网，Cloudflare Pages 是最快的一条路。\n\n## 拖拽部署\n\n1. 登录 dash.cloudflare.com，进 Workers 和 Pages\n2. 创建 → Pages → 上传资源\n3. 项目名决定域名 `<项目名>.pages.dev`\n4. 把构建产物的**内容**拖进去（不是拖外层文件夹）\n\n一分钟出结果。\n\n## 两个必须加的配置\n\n**SPA 路由**——根目录放 `_redirects`：\n\n```\n/*    /index.html   200\n```\n\n没有它，除首页以外一刷新就 404。\n\n**缓存头**——`_headers`：\n\n```\n/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n```\n\n## 接 Git 自动发布\n\n仓库连上去，构建命令留空，输出目录填产物路径，之后 `git push` 就自动上线。\n\n## 一个坑\n\n上传前确认没把 `node_modules` 一起拖进去，几百兆会传到怀疑人生。",
+      "published": true,
+      "cover": "/covers/post-17.svg"
+    },
+    {
+      "id": 18,
+      "slug": "python-venv",
+      "title": "Python 虚拟环境怎么用才不乱",
+      "date": "2026-10-16T09:05:00",
+      "modified": "2026-10-16T09:05:00",
+      "category": "效率工具",
+      "tags": [
+        "Python",
+        "环境"
+      ],
+      "excerpt": "一个项目一个环境，别 sudo pip install。",
+      "format": "md",
+      "body": "系统 Python 装包装多了必然打架，一个项目一个虚拟环境最省心。\n\n## 建和用\n\n```bash\npython3 -m venv .venv\nsource .venv/bin/activate      # Windows: .venv\\Scripts\\activate\npip install -r requirements.txt\ndeactivate\n```\n\n激活后 `which python` 应该指向 `.venv` 里的那个，而不是 `/usr/bin/python3`。\n\n## 生成依赖清单\n\n```bash\npip freeze > requirements.txt\n```\n\n只是自己跑，不必 freeze 全部；手写主要的几个包更好维护。\n\n## 三个习惯\n\n- `.venv` 进 `.gitignore`，别提交\n- 别用 `sudo pip install`，会污染系统目录\n- 升级 Python 后重建环境，虚拟环境不可迁移\n\n## 顺便\n\n只想要个隔离的命令行工具，`pipx install 包名` 比建环境更轻，装完全局可用又是隔离的。",
+      "published": true,
+      "cover": "/covers/post-18.svg"
+    },
+    {
+      "id": 19,
+      "slug": "ffmpeg-压缩录屏",
+      "title": "用 ffmpeg 把录屏压小",
+      "date": "2026-10-15T21:30:00",
+      "modified": "2026-10-15T21:30:00",
+      "category": "效率工具",
+      "tags": [
+        "ffmpeg",
+        "视频"
+      ],
+      "excerpt": "crf 26 + 1280 宽，体积通常能砍到三分之一。",
+      "format": "md",
+      "body": "录屏十分钟动辄几百兆，发出去之前压一下。\n\n## 一条够用的命令\n\n```bash\nffmpeg -i input.mp4 -c:v libx264 -crf 26 -preset veryfast \\\n  -c:a aac -b:a 96k -vf \"scale=1280:-2\" output.mp4\n```\n\n## 参数怎么理解\n\n- `-crf`：画质与体积的旋钮，18 接近无损，28 能看出糊，26 是个平衡点\n- `-preset`：越慢压得越小，`veryfast` 够用，赶时间用 `ultrafast`\n- `scale=1280:-2`：宽度压到 1280，高度自动，`-2` 保证偶数（编码器要求）\n- `-b:a 96k`：讲解类视频 96k 完全够\n\n## 只截一段\n\n```bash\nffmpeg -ss 00:01:30 -to 00:03:00 -i input.mp4 -c copy clip.mp4\n```\n\n`-c copy` 不重新编码，几秒钟完成。\n\n## 看收益\n\n压完 `ls -lh` 对比一下，一般能小到原来的三分之一，而 PPT 上的字和代码依然清楚。",
+      "published": true,
+      "cover": "/covers/post-19.svg"
+    },
+    {
+      "id": 20,
+      "slug": "虚拟机快照策略",
+      "title": "虚拟机快照怎么用才不会拖垮性能",
+      "date": "2026-10-14T10:00:00",
+      "modified": "2026-10-14T10:00:00",
+      "category": "虚拟化",
+      "tags": [
+        "VMware",
+        "快照"
+      ],
+      "excerpt": "快照不是备份；挂着不删会有写放大，三层以上就该合并。",
+      "format": "md",
+      "body": "快照是虚拟机最值钱的功能，但用错会拖垮性能。\n\n## 快照不是备份\n\n快照记录的是磁盘在某一刻的状态，文件还在原地。母盘损坏，快照一起没。真正的备份要复制到别的存储。\n\n## 什么时候拍\n\n- 装软件、升级系统、改网络配置之前\n- 做实验、跑可能有破坏性的命令之前\n\n拍一个叫「干净系统」的基线快照，以后所有实验都从它分叉。\n\n## 三条纪律\n\n1. **别长期挂着**：快照越多写放大越严重，磁盘 IO 会肉眼可见地变差\n2. **别拍太多层**：三层以上就该合并\n3. **要长期保留就转克隆**：完整克隆固化下来，别指望快照\n\n## 克隆之后必须改的\n\n```bash\nsudo rm /etc/machine-id\nsudo systemd-machine-id-setup\nsudo hostnamectl set-hostname node2\n```\n\nmachine-id 一样会导致日志、监控、DHCP 各种错乱，这一步经常被忘。",
+      "published": true,
+      "cover": "/covers/post-20.svg"
+    }
+  ],
+  "shuoshuo": [],
+  "links": [],
+  "papers": [
+    {
+      "id": 1,
+      "title": "Attention Is All You Need",
+      "authors": "Vaswani, Shazeer, Parmar 等",
+      "venue": "NeurIPS",
+      "year": "2017",
+      "category": "自然语言处理",
+      "summary": "提出完全基于自注意力机制的 Transformer，去掉循环与卷积，训练可并行、长距离依赖建模更好，成为此后几乎所有大模型的基础结构。",
+      "url": "https://arxiv.org/abs/1706.03762",
+      "tags": [
+        "Transformer",
+        "注意力机制"
+      ],
+      "readDate": "2026-09-12"
+    },
+    {
+      "id": 2,
+      "title": "BERT: Pre-training of Deep Bidirectional Transformers for Language Understanding",
+      "authors": "Devlin, Chang, Lee, Toutanova",
+      "venue": "NAACL",
+      "year": "2019",
+      "category": "自然语言处理",
+      "summary": "用掩码语言模型 + 下一句预测做双向预训练，再在下游任务上微调，刷新了 11 项 NLP 任务的成绩，确立了「预训练 + 微调」范式。",
+      "url": "https://arxiv.org/abs/1810.04805",
+      "tags": [
+        "预训练",
+        "BERT"
+      ],
+      "readDate": "2026-09-20"
+    },
+    {
+      "id": 3,
+      "title": "RotatE: Knowledge Graph Embedding by Relational Rotation in Complex Space",
+      "authors": "Sun, Deng, Nie, Tang",
+      "venue": "ICLR",
+      "year": "2019",
+      "category": "知识图谱",
+      "summary": "把关系建模成复数空间中的旋转，能同时表达对称、反对称、逆和组合四类关系模式，在链接预测任务上效果显著优于此前方法。",
+      "url": "https://arxiv.org/abs/1902.10197",
+      "tags": [
+        "知识图谱",
+        "表示学习"
+      ],
+      "readDate": "2026-10-08"
+    }
+  ],
+  "projects": [
+    {
+      "id": 1,
+      "name": "infoGather 风险发现平台",
+      "role": "独立设计与开发",
+      "period": "2025.03 – 至今",
+      "status": "v4.0 运行中",
+      "summary": "面向公开信息保密检查的采集与分析平台：域名侦察、ICP 反查、外链扩展、正文抽取入库，配套 FastAPI 服务与 Elasticsearch 检索，支持批量任务与结果回溯。",
+      "stack": [
+        "Python",
+        "FastAPI",
+        "MySQL",
+        "Elasticsearch",
+        "MinIO"
+      ],
+      "url": ""
+    },
+    {
+      "id": 2,
+      "name": "CSG 多源公开信息风险监测",
+      "role": "技术负责人",
+      "period": "2024.06 – 2025.02",
+      "status": "已交付",
+      "summary": "对接多源公开渠道，构建规则字典与 NER 抽取链路，结合知识图谱关联实体，对大模型研判结果做人工复核闭环。",
+      "stack": [
+        "NER",
+        "知识图谱",
+        "DeepSeek",
+        "规则引擎"
+      ],
+      "url": ""
+    },
+    {
+      "id": 3,
+      "name": "公开信息保密检查系统",
+      "role": "核心开发",
+      "period": "2023.09 – 2024.05",
+      "status": "已上线",
+      "summary": "把分散在网站、文档、附件中的敏感信息统一纳入检查流程，支持检查项配置、命中证据留存与报告导出。",
+      "stack": [
+        "Vue",
+        "Python",
+        "OCR",
+        "文档解析"
+      ],
+      "url": ""
+    },
+    {
+      "id": 4,
+      "name": "教师与导师数据采集系统",
+      "role": "独立开发",
+      "period": "2023.03 – 2023.08",
+      "status": "已交付",
+      "summary": "按院校维度采集教师主页与公开履历，做字段归一与去重，为人才画像与背景核查提供基础数据。",
+      "stack": [
+        "爬虫",
+        "数据清洗",
+        "MySQL"
+      ],
+      "url": ""
+    }
+  ],
+  "awards": [
+    {
+      "id": 1,
+      "name": "国家奖学金",
+      "issuer": "教育部",
+      "level": "国家级",
+      "date": "2025-11",
+      "summary": "研究生阶段学业与科研综合表现评定，全校名额比例约 2%。",
+      "certificate": ""
+    }
+  ]
+}
