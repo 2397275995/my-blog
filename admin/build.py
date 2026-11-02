@@ -585,10 +585,22 @@ def rebuild():
         yield '   ' + l
 
     dist = os.path.join(BUILD_DIR, out_dir)
+
+    # prism 代码高亮资源由 node_modules 生成到 dist/prism。
+    # 本地可能早就有了，但 GitHub Actions 是干净环境，必须先生成再复制。
     prism_src = os.path.join(BUILD_DIR, 'dist', 'prism')
+    if not os.path.isdir(prism_src):
+        subprocess.run(
+            'node bin/copy-prism.mjs',
+            cwd=BUILD_DIR, env=_node_env(), shell=True,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+        )
+
     if os.path.isdir(prism_src) and not os.path.isdir(os.path.join(dist, 'prism')):
         shutil.copytree(prism_src, os.path.join(dist, 'prism'))
         yield '   → 复制 prism 代码高亮资源'
+    elif not os.path.isdir(prism_src):
+        yield '   ! 没找到 prism 资源，代码高亮可能失效'
 
     yield '④ 替换线上成品'
     moved = False
