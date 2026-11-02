@@ -1,14 +1,13 @@
 @echo off
-chcp 65001 >nul
-title iielxy åšå®¢åå°
+title iielxy ²©¿ÍºóÌ¨
 cd /d "%~dp0admin"
 
 set "PY=C:\Users\23972\.workbuddy\binaries\python\versions\3.13.12\python.exe"
 if not exist "%PY%" set "PY=python"
 
-echo æ­£åœ¨å¯åŠ¨åå°ç®¡ç†æœåŠ¡â€¦
-echo æµè§ˆå™¨ä¼šè‡ªåŠ¨æ‰“å¼€ http://127.0.0.1:8910/
-echo å…³é—­æœ¬çª—å£å³åœæ­¢æœåŠ¡ã€‚
+echo ÕıÔÚÆô¶¯ºóÌ¨¹ÜÀí·şÎñ¡­
+echo ä¯ÀÀÆ÷»á×Ô¶¯´ò¿ª http://127.0.0.1:8910/
+echo ¹Ø±Õ±¾´°¿Ú¼´Í£Ö¹·şÎñ¡£
 echo.
 "%PY%" admin.py
 pause

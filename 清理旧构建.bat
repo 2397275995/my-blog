@@ -1,6 +1,5 @@
 @echo off
-chcp 65001 >nul
-title æ¸…ç†æ—§æ„å»ºå‰¯æœ¬
+title ÇåÀí¾É¹¹½¨¸±±¾
 cd /d "%~dp0"
 
 set "PY=C:\Users\23972\.workbuddy\binaries\python\versions\3.13.12\python.exe"

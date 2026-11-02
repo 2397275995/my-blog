@@ -1,6 +1,5 @@
 @echo off
-chcp 65001 >nul
-title 发布到 EdgeOne Pages
+title ������ EdgeOne Pages
 cd /d "%~dp0"
 
 setlocal enabledelayedexpansion
@@ -10,95 +9,95 @@ set "PY=C:\Users\23972\.workbuddy\binaries\python\versions\3.13.12\python.exe"
 if not exist "%PY%" set "PY=python"
 
 echo ================================================
-echo   发布到 EdgeOne Pages
+echo   ������ EdgeOne Pages
 echo ================================================
 echo.
 
-rem ---------- 1. 检查产物 ----------
+rem ---------- 1. ������ ----------
 if not exist "%SITE%\index.html" (
-  echo [x] 找不到 %SITE%\index.html
-  echo     请先在后台「构建发布」里点一次「重新构建站点」。
+  echo [x] �Ҳ��� %SITE%\index.html
+  echo     �����ں�̨���������������һ�Ρ����¹���վ�㡹��
   echo.
   pause
   exit /b 1
 )
 
-rem ---------- 2. 是否先重新构建 ----------
+rem ---------- 2. �Ƿ������¹��� ----------
 set "REBUILD="
-set /p REBUILD=先重新构建站点吗？(y/N，改了内容选 y):
+set /p REBUILD=�����¹���վ����(y/N����������ѡ y):
 if /i "%REBUILD%"=="y" (
   echo.
-  echo === 正在构建，约 3 分钟，请勿关闭窗口 ===
+  echo === ���ڹ�����Լ 3 ���ӣ�����رմ��� ===
   "%PY%" "admin\build.py" --rebuild
   if errorlevel 1 (
     echo.
-    echo [x] 构建失败，已中止发布。
+    echo [x] ����ʧ�ܣ�����ֹ������
     pause
     exit /b 1
   )
   echo.
 )
 
-rem ---------- 3. 项目名 ----------
+rem ---------- 3. ��Ŀ�� ----------
 set "PROJ="
 if exist "%CFG%" (
   for /f "usebackq delims=" %%a in ("%CFG%") do set "PROJ=%%a"
 )
 if "%PROJ%"=="" (
   echo.
-  echo 第一次使用，需要填一次 EdgeOne 控制台里的「项目名称」。
-  echo （就是你上传文件夹时那个项目的名字，之后会记住）
+  echo ��һ��ʹ�ã���Ҫ��һ�� EdgeOne ����̨��ġ���Ŀ���ơ���
+  echo ���������ϴ��ļ���ʱ�Ǹ���Ŀ�����֣�֮����ס��
   echo.
-  set /p PROJ=项目名称:
+  set /p PROJ=��Ŀ����:
   if "!PROJ!"=="" (
-    echo [x] 项目名称不能为空。
+    echo [x] ��Ŀ���Ʋ���Ϊ�ա�
     pause
     exit /b 1
   )
   > "%CFG%" echo !PROJ!
-  echo 已记住，下次不用再填。
+  echo �Ѽ�ס���´β������
 )
 
-rem ---------- 4. 检查 npx ----------
+rem ---------- 4. ��� npx ----------
 where npx >nul 2>&1
 if errorlevel 1 (
   echo.
-  echo [x] 找不到 npx，请先安装 Node.js: https://nodejs.org
+  echo [x] �Ҳ��� npx�����Ȱ�װ Node.js: https://nodejs.org
   pause
   exit /b 1
 )
 
-rem ---------- 5. 登录状态 ----------
+rem ---------- 5. ��¼״̬ ----------
 echo.
-echo === 检查登录状态 ===
+echo === ����¼״̬ ===
 call npx -y edgeone whoami >nul 2>&1
 if errorlevel 1 (
-  echo 还没登录，接下来会打开浏览器，用腾讯云账号登录一次即可。
-  echo （登录状态会保存，以后不用重复登录）
+  echo ��û��¼����������������������Ѷ���˺ŵ�¼һ�μ��ɡ�
+  echo ����¼״̬�ᱣ�棬�Ժ����ظ���¼��
   echo.
   call npx -y edgeone login
   if errorlevel 1 (
     echo.
-    echo [x] 登录失败或被取消。
+    echo [x] ��¼ʧ�ܻ�ȡ����
     pause
     exit /b 1
   )
 ) else (
-  echo 已登录。
+  echo �ѵ�¼��
 )
 
-rem ---------- 6. 部署 ----------
+rem ---------- 6. ���� ----------
 echo.
-echo === 开始部署：%SITE%  →  项目 %PROJ% ===
+echo === ��ʼ����%SITE%  ��  ��Ŀ %PROJ% ===
 echo.
 call npx -y edgeone pages deploy "%SITE%" -n "%PROJ%" -e production
 set "CODE=%errorlevel%"
 
 echo.
 if not "%CODE%"=="0" (
-  echo [x] 部署失败，退出码 %CODE%，看上面的输出。
+  echo [x] ����ʧ�ܣ��˳��� %CODE%��������������
 ) else (
-  echo [✓] 部署完成，去控制台或直接用域名访问吧。
+  echo [OK] ������ɣ�ȥ����̨��ֱ�����������ʰɡ�
 )
 echo.
 pause

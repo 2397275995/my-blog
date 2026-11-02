@@ -1,15 +1,27 @@
 @echo off
-chcp 65001 >nul
-title æŽ¨é€åˆ° GitHub
+title ÍÆËÍµ½ GitHub
 cd /d "%~dp0"
 
+git rev-parse --is-inside-work-tree >nul 2>&1
+if errorlevel 1 (
+  echo [x] µ±Ç°Ä¿Â¼²»ÊÇ git ²Ö¿â£º%CD%
+  pause
+  exit /b 1
+)
+git remote get-url origin >nul 2>&1
+if errorlevel 1 (
+  echo [x] Ã»ÓÐÅäÖÃÔ¶¶Ë origin
+  pause
+  exit /b 1
+)
+
 echo ================================================
-echo   æŽ¨é€åšå®¢é¡¹ç›®åˆ° GitHub
-echo   ä»“åº“ï¼šhttps://github.com/2397275995/my-blog
+echo   ÍÆËÍ²©¿ÍÏîÄ¿µ½ GitHub
+echo   ²Ö¿â£ºhttps://github.com/2397275995/my-blog
 echo ================================================
 echo.
-echo ç¬¬ä¸€æ¬¡è¿è¡Œä¼šå¼¹å‡º GitHub ç™»å½•çª—å£ï¼Œç”¨æµè§ˆå™¨ç™»å½•å¹¶æŽˆæƒå³å¯ï¼Œ
-echo ä¹‹åŽå‡­æ®ä¼šè®°ä½ï¼Œå†æŽ¨å°±ä¸ç”¨ç™»å½•äº†ã€‚
+echo µÚÒ»´ÎÔËÐÐ»áµ¯³ö GitHub µÇÂ¼´°¿Ú£¬ÓÃä¯ÀÀÆ÷µÇÂ¼²¢ÊÚÈ¨¼´¿É£¬
+echo Ö®ºóÆ¾¾Ý»á¼Ç×¡£¬ÔÙÍÆ¾Í²»ÓÃµÇÂ¼ÁË¡£
 echo.
 pause
 
@@ -17,31 +29,31 @@ git push -u origin main
 if errorlevel 1 goto failed
 
 echo.
-echo [âœ“] æŽ¨é€æˆåŠŸã€‚
+echo [OK] ÍÆËÍ³É¹¦¡£
 echo.
-echo æŽ¥ä¸‹æ¥åšä¸¤ä»¶äº‹ï¼š
-echo   1. ä»“åº“ Settings - Secrets and variables - Actions
-echo      - Secret   EDGEONE_TOKEN    å¡« EdgeOne çš„ API Token
-echo      - Variable EDGEONE_PROJECT  å¡« EdgeOne çš„é¡¹ç›®åç§°
-echo   2. æ‰“å¼€ /write.html å¡«ä»“åº“åã€åˆ†æ”¯ã€GitHub Tokenï¼Œå°±èƒ½åœ¨çº¿å†™æ–‡ç« äº†
+echo ½ÓÏÂÀ´×öÁ½¼þÊÂ£º
+echo   1. ²Ö¿â Settings - Secrets and variables - Actions
+echo      - Secret   EDGEONE_TOKEN    Ìî EdgeOne µÄ API Token
+echo      - Variable EDGEONE_PROJECT  Ìî EdgeOne µÄÏîÄ¿Ãû³Æ
+echo   2. ´ò¿ª /write.html Ìî²Ö¿âÃû¡¢·ÖÖ§¡¢GitHub Token£¬¾ÍÄÜÔÚÏßÐ´ÎÄÕÂÁË
 echo.
 pause
 exit /b 0
 
 :failed
 echo.
-echo [x] æŽ¨é€å¤±è´¥ï¼Œå¸¸è§åŽŸå› ï¼š
+echo [x] ÍÆËÍÊ§°Ü£¬³£¼ûÔ­Òò£º
 echo.
-echo   1. ä»“åº“ä¸æ˜¯ç©ºçš„ï¼ˆå»ºä»“åº“æ—¶å‹¾äº† README / .gitignoreï¼‰
-echo      å¤„ç†ï¼šå…ˆæ‰§è¡Œ  git pull --rebase origin main  å†è¿è¡Œæœ¬è„šæœ¬
-echo      æˆ–è€…ç¡®è®¤ä»“åº“é‡Œæ²¡æœ‰è¦ä¿ç•™çš„å†…å®¹åŽï¼Œæ”¹ä¸ºå¼ºåˆ¶æŽ¨é€ï¼š
+echo   1. ²Ö¿â²»ÊÇ¿ÕµÄ£¨½¨²Ö¿âÊ±¹´ÁË README / .gitignore£©
+echo      ´¦Àí£ºÏÈÖ´ÐÐ  git pull --rebase origin main  ÔÙÔËÐÐ±¾½Å±¾
+echo      »òÕßÈ·ÈÏ²Ö¿âÀïÃ»ÓÐÒª±£ÁôµÄÄÚÈÝºó£¬¸ÄÎªÇ¿ÖÆÍÆËÍ£º
 echo            git push -u -f origin main
 echo.
-echo   2. ç™»å½•è¢«å–æ¶ˆï¼Œæˆ–è´¦å·æ²¡æœ‰è¿™ä¸ªä»“åº“çš„æƒé™
-echo      å¤„ç†ï¼šé‡æ–°è¿è¡Œæœ¬è„šæœ¬ï¼Œç™»å½•æ—¶ç”¨æœ‰æƒé™çš„è´¦å·
+echo   2. µÇÂ¼±»È¡Ïû£¬»òÕËºÅÃ»ÓÐÕâ¸ö²Ö¿âµÄÈ¨ÏÞ
+echo      ´¦Àí£ºÖØÐÂÔËÐÐ±¾½Å±¾£¬µÇÂ¼Ê±ÓÃÓÐÈ¨ÏÞµÄÕËºÅ
 echo.
-echo   3. ç½‘ç»œé—®é¢˜ï¼ˆå›½å†…è®¿é—® GitHub ä¸ç¨³å®šï¼‰
-echo      å¤„ç†ï¼šæŒ‚ä»£ç†åŽé‡è¯•ï¼Œæˆ–æ”¹ç”¨ SSH æ–¹å¼æŽ¨é€
+echo   3. ÍøÂçÎÊÌâ£¨¹úÄÚ·ÃÎÊ GitHub ²»ÎÈ¶¨£©
+echo      ´¦Àí£º¹Ò´úÀíºóÖØÊÔ£¬»ò¸ÄÓÃ SSH ·½Ê½ÍÆËÍ
 echo.
 pause
 exit /b 1
