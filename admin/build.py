@@ -541,6 +541,9 @@ def write_about(content):
 
 def _node_env():
     env = os.environ.copy()
+    # 内容全部来自 content.json，必须走本地 mock 数据层。
+    # .env 可能不存在（云端首次构建），这里强制注入，避免线上请求真实 API 而 404。
+    env['VITE_USE_MOCK'] = 'true'
     managed = r'C:\Users\23972\.workbuddy\binaries\node\versions\22.22.2'
     if os.name == 'nt' and os.path.isdir(managed):
         env['PATH'] = managed + os.pathsep + env.get('PATH', '')
