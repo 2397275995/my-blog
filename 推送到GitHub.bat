@@ -25,6 +25,17 @@ echo 之后凭据会记住，再推就不用登录了。
 echo.
 pause
 
+echo === 先同步远端（在线写作可能提交过内容）===
+git pull --rebase origin main
+if errorlevel 1 (
+  echo.
+  echo [x] 自动合并失败，多半是 content.json 冲突。
+  echo     先执行  git rebase --abort  回到原状，然后把情况告诉 WorkBuddy，
+  echo     让他按数据结构合并，别硬改。
+  pause
+  exit /b 1
+)
+echo.
 git push -u origin main
 if errorlevel 1 goto failed
 
