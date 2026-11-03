@@ -1,6 +1,13 @@
 @echo off
 title 推送到 GitHub
 cd /d "%~dp0"
+set "LOG=%TEMP%\blog-push.log"
+
+echo ================================================
+echo   推送博客项目到 GitHub
+echo   仓库：https://github.com/2397275995/my-blog
+echo ================================================
+echo.
 
 git rev-parse --is-inside-work-tree >nul 2>&1
 if errorlevel 1 (
@@ -8,63 +15,70 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-git remote get-url origin >nul 2>&1
-if errorlevel 1 (
-  echo [x] 没有配置远端 origin
+
+echo === 第一步：同步远端 ===
+git pull --rebase origin main > "%LOG%" 2>&1
+if errorlevel 1 goto pulllog
+echo 已同步。
+goto push
+
+:pulllog
+type "%LOG%"
+echo.
+
+findstr /C:"CONFLICT" /C:"Automatic merge failed" "%LOG%" >nul
+if not errorlevel 1 (
+  echo [x] 和远端内容冲突，需要按数据结构合并。
+  echo     先执行：git rebase --abort
+  echo     然后把情况告诉 WorkBuddy，别自己手改 content.json。
   pause
   exit /b 1
 )
 
-echo ================================================
-echo   推送博客项目到 GitHub
-echo   仓库：https://github.com/2397275995/my-blog
-echo ================================================
-echo.
-echo 第一次运行会弹出 GitHub 登录窗口，用浏览器登录并授权即可，
-echo 之后凭据会记住，再推就不用登录了。
-echo.
+findstr /C:"Could not connect" /C:"Failed to connect" /C:"timed out" /C:"Could not resolve host" /C:"Connection refused" "%LOG%" >nul
+if not errorlevel 1 (
+  echo [!] 连不上 GitHub，这是网络问题，不是代码问题。
+  echo     1. 等几分钟重试，或者换网络 / 开代理
+  echo     2. 有代理可以设：git config --global http.proxy http://127.0.0.1:端口
+  echo     3. 网络恢复后重新运行本脚本即可，本地提交不会丢
+  pause
+  exit /b 1
+)
+
+echo [x] 同步失败，原因见上面的输出。
 pause
+exit /b 1
 
-echo === 先同步远端（在线写作可能提交过内容）===
-git pull --rebase origin main
-if errorlevel 1 (
-  echo.
-  echo [x] 自动合并失败，多半是 content.json 冲突。
-  echo     先执行  git rebase --abort  回到原状，然后把情况告诉 WorkBuddy，
-  echo     让他按数据结构合并，别硬改。
-  pause
-  exit /b 1
-)
+:push
 echo.
-git push -u origin main
-if errorlevel 1 goto failed
-
+echo === 第二步：推送 ===
+git push -u origin main > "%LOG%" 2>&1
+if errorlevel 1 goto pushlog
+type "%LOG%"
 echo.
 echo [OK] 推送成功。
 echo.
-echo 接下来做两件事：
-echo   1. 仓库 Settings - Secrets and variables - Actions
-echo      - Secret   EDGEONE_TOKEN    填 EdgeOne 的 API Token
-echo      - Variable EDGEONE_PROJECT  填 EdgeOne 的项目名称
-echo   2. 打开 /write.html 填仓库名、分支、GitHub Token，就能在线写文章了
+echo 接下来 EdgeOne 会自动构建，约两分钟后线上生效。
+echo 刷新页面时按 Ctrl+Shift+R 强刷。
 echo.
 pause
 exit /b 0
 
-:failed
+:pushlog
+type "%LOG%"
 echo.
-echo [x] 推送失败，常见原因：
-echo.
-echo   1. 仓库不是空的（建仓库时勾了 README / .gitignore）
-echo      处理：先执行  git pull --rebase origin main  再运行本脚本
-echo      或者确认仓库里没有要保留的内容后，改为强制推送：
-echo            git push -u -f origin main
-echo.
-echo   2. 登录被取消，或账号没有这个仓库的权限
-echo      处理：重新运行本脚本，登录时用有权限的账号
-echo.
-echo   3. 网络问题（国内访问 GitHub 不稳定）
-echo      处理：挂代理后重试，或改用 SSH 方式推送
-echo.
+findstr /C:"Could not connect" /C:"Failed to connect" /C:"timed out" /C:"Could not resolve host" "%LOG%" >nul
+if not errorlevel 1 (
+  echo [!] 推送时连不上 GitHub，网络问题。本地提交都还在，稍后重试即可。
+  pause
+  exit /b 1
+)
+findstr /C:"rejected" /C:"non-fast-forward" "%LOG%" >nul
+if not errorlevel 1 (
+  echo [x] 远端又有新的提交了。再运行一次本脚本，它会先拉取再推。
+  pause
+  exit /b 1
+)
+echo [x] 推送失败，原因见上面的输出。
 pause
 exit /b 1
