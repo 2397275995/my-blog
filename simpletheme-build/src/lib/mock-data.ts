@@ -110,8 +110,8 @@ export const mockMenuItems = [
   {
     id: 3,
     title: "AI 热点",
-    url: "https://ai-trends-dp78y8lgvuo4.edgeone.dev/",
-    path: "https://ai-trends-dp78y8lgvuo4.edgeone.dev/",
+    url: "https://ai-trends-3geospsq.edgeone.dev/",
+    path: "https://ai-trends-3geospsq.edgeone.dev/",
     target: "_blank",
     description: '',
     current: false,
