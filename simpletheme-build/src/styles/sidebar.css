@@ -751,3 +751,54 @@ body[data-theme='dark'] .aside-card--social .social-content .social-icons a {
   margin-bottom: 18px;
 }
 }
+
+/* ============================================================
+   桌面端：图标下方显示菜单文字
+   原来 .menu-item-title 只在移动端显示、桌面端留作 tooltip 数据源，
+   导致左侧一列 9 个图标没有一个是可读的。这里补上文字标签，
+   让「写博客 / AI 热点 / Claude 助手 / 归档 / 论文…」一眼可辨。
+   ============================================================ */
+@media (min-width: 1024px) {
+  .left-sidebar__menu ul li a,
+  .left-sidebar__menu ul li button.menu-toggle {
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+    width: 62px;
+    height: auto;
+    min-height: 54px;
+    padding: 8px 2px 6px;
+    line-height: 1;
+  }
+
+  .left-sidebar__menu ul li a .menu-item-title,
+  .left-sidebar__menu ul li button.menu-toggle .menu-item-title {
+    display: block;
+    width: 100%;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
+    color: var(--secondary);
+    text-align: center;
+    white-space: nowrap;
+    word-break: keep-all;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: color var(--transition-fast);
+  }
+
+  .left-sidebar__menu ul li a:hover .menu-item-title,
+  .left-sidebar__menu ul li button.menu-toggle:hover .menu-item-title {
+    color: var(--foreground);
+  }
+
+  .left-sidebar__menu ul li.current-menu-item > a .menu-item-title {
+    color: var(--primary-foreground);
+  }
+
+  /* 当前项是实心方块，文字要跟着反色 */
+  .left-sidebar__menu ul li.current-menu-item > a svg {
+    color: var(--primary-foreground);
+  }
+}

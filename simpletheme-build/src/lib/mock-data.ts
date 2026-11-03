@@ -120,7 +120,7 @@ export const mockMenuItems = [
   },
   {
     id: 4,
-    title: "Claude 助手",
+    title: "Claude",
     url: "https://claude-ai.lxyblog.top/",
     path: "https://claude-ai.lxyblog.top/",
     target: "_blank",
