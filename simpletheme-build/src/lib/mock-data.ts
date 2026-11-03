@@ -110,8 +110,8 @@ export const mockMenuItems = [
   {
     id: 3,
     title: "AI 热点",
-    url: "https://ai-trends-3geospsq.edgeone.dev/",
-    path: "https://ai-trends-3geospsq.edgeone.dev/",
+    url: "https://aitrend.lxyblog.top/",
+    path: "https://aitrend.lxyblog.top/",
     target: "_blank",
     description: '',
     current: false,
@@ -120,6 +120,17 @@ export const mockMenuItems = [
   },
   {
     id: 4,
+    title: "Claude 助手",
+    url: "https://claude-ai.lxyblog.top/",
+    path: "https://claude-ai.lxyblog.top/",
+    target: "_blank",
+    description: '',
+    current: false,
+    icon: "message-dots",
+    children: [],
+  },
+  {
+    id: 5,
     title: "归档",
     url: "/archives",
     path: "/archives",
@@ -130,7 +141,7 @@ export const mockMenuItems = [
     children: [],
   },
   {
-    id: 5,
+    id: 6,
     title: "论文",
     url: "/papers",
     path: "/papers",
@@ -141,7 +152,7 @@ export const mockMenuItems = [
     children: [],
   },
   {
-    id: 6,
+    id: 7,
     title: "项目",
     url: "/projects",
     path: "/projects",
@@ -152,7 +163,7 @@ export const mockMenuItems = [
     children: [],
   },
   {
-    id: 7,
+    id: 8,
     title: "奖项",
     url: "/awards",
     path: "/awards",
@@ -163,7 +174,7 @@ export const mockMenuItems = [
     children: [],
   },
   {
-    id: 8,
+    id: 9,
     title: "关于",
     url: "/about",
     path: "/about",

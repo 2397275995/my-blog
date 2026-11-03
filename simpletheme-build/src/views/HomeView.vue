@@ -351,6 +351,21 @@ function cancelPrefetch(post: WordPressPost) {
         </svg>
         写博客
       </a>
+      <a
+        v-if="!categorySlug"
+        class="write-entry"
+        href="https://claude-ai.lxyblog.top/"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 11v.01" />
+          <path d="M8 11v.01" />
+          <path d="M16 11v.01" />
+          <path d="M18 4a3 3 0 0 1 3 3v8a3 3 0 0 1 -3 3h-5l-5 3v-3h-2a3 3 0 0 1 -3 -3v-8a3 3 0 0 1 3 -3l12 0" />
+        </svg>
+        Claude 助手
+      </a>
     </header>
 
 
@@ -624,6 +639,11 @@ function cancelPrefetch(post: WordPressPost) {
     color 0.18s ease,
     border-color 0.18s ease,
     background-color 0.18s ease;
+}
+
+/* 第二个按钮不再抢左侧空间，两个按钮靠在一起 */
+.write-entry + .write-entry {
+  margin-left: 0;
 }
 
 .write-entry:hover {
