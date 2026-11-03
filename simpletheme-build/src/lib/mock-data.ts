@@ -2519,6 +2519,18 @@ export const mockPapers = [
     tags: ["知识图谱", "表示学习"],
     readDate: "2026-10-08",
   },
+  {
+    id: 4,
+    title: "SceneOrchestra: Efficient Agentic 3D Scene Synthesis via Full Tool-Call Trajectory Generation",
+    authors: "",
+    venue: "ECCV",
+    year: "2026",
+    category: "agent",
+    summary: "SceneOrchestra 把 SceneWeaver 那种「执行一步—渲染中间结果—审阅—再决定下一步」的逐步智能体循环换成单次前向：微调一个 Qwen3-4B 的 orchestrator 直接吐出完整工具调用轨迹，再训练一个判别器做多候选重排并把排序能力蒸馏回 orchestrator，在 10 类房间上质量全面超过 SceneWeaver，平均生成时间从 91.0 分钟降到 39.7 分钟。",
+    url: "https://eccv.ecva.net/virtual/2026/poster/4593",
+    tags: [],
+    readDate: "",
+  },
 ]
 
 export const mockProjects = [
